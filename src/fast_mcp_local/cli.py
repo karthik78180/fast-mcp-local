@@ -103,6 +103,17 @@ def list_types():
     click.echo(result)
 
 
+@cli.command(name='list-verticles')
+def list_verticles():
+    """List all available verticle templates (alias for list-types).
+
+    Example:
+        mcp list-verticles
+    """
+    result = list_verticle_types()
+    click.echo(result)
+
+
 # =============================================================================
 # Convenience Aliases
 # =============================================================================

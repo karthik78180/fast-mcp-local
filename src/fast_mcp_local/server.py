@@ -75,24 +75,14 @@ def search_documents(query: str, limit: int = 10) -> str:
         limit: Maximum results to return (default: 10)
 
     Returns:
-        JSON with matching documents and snippets
+        JSON array of matching documents with snippets
     """
     if not db:
-        return json.dumps({"error": "Database not initialized"})
+        return json.dumps([])
 
     results = db.search_documents(query, limit)
 
-    if not results:
-        return json.dumps({
-            "message": f"No documents found matching '{query}'",
-            "suggestion": "Try broader search terms or check docs/ directory"
-        })
-
-    return json.dumps({
-        "query": query,
-        "count": len(results),
-        "results": results
-    }, indent=2)
+    return json.dumps(results, indent=2)
 
 
 def get_document(filename: str) -> str:
@@ -127,33 +117,15 @@ def list_documents() -> str:
         JSON array of all documents with metadata
     """
     if not db:
-        return json.dumps({"error": "Database not initialized"})
+        return json.dumps([])
 
     documents = db.get_all_documents()
 
-    if not documents:
-        return json.dumps({
-            "message": "No documents found",
-            "suggestion": "Add markdown files to docs/ directory"
-        })
+    return json.dumps(documents, indent=2)
 
-    # Group by directory for better organization
-    grouped = {}
-    for doc in documents:
-        parts = doc["filename"].split("/")
-        category = parts[0] if len(parts) > 1 else "root"
-        if category not in grouped:
-            grouped[category] = []
-        grouped[category].append({
-            "filename": doc["filename"],
-            "title": doc["title"],
-            "tokens": doc["tokens"]
-        })
 
-    return json.dumps({
-        "total": len(documents),
-        "categories": grouped
-    }, indent=2)
+# Alias for backward compatibility
+get_all_documents = list_documents
 
 
 # =============================================================================
@@ -212,6 +184,7 @@ def generate_verticle(verticle_type: str) -> str:
         "verticle_code": code_blocks.get("java", ""),
         "gradle_dependencies": metadata.get("gradle_dependencies", []),
         "config_example": config_example,
+        "deployment_example": code_blocks.get("deployment", ""),
         "use_cases": metadata.get("use_cases", [])
     }
 
@@ -225,25 +198,11 @@ def list_verticle_types() -> str:
         JSON array of available templates
     """
     if not metadata_loader:
-        return json.dumps({"error": "Template system not initialized"})
+        return json.dumps([])
 
     types = metadata_loader.list_all_types()
 
-    # Group by category (platform vs standard)
-    platform_handlers = []
-    standard_verticles = []
-
-    for t in types:
-        if t["type"].startswith("platform-"):
-            platform_handlers.append(t)
-        else:
-            standard_verticles.append(t)
-
-    return json.dumps({
-        "total": len(types),
-        "platform_handlers": platform_handlers,
-        "standard_verticles": standard_verticles
-    }, indent=2)
+    return json.dumps(types, indent=2)
 
 
 # =============================================================================
@@ -355,6 +314,7 @@ def get_compliance_report(pattern_id: str, codebase_path: str) -> str:
 mcp.tool()(search_documents)
 mcp.tool()(get_document)
 mcp.tool()(list_documents)
+mcp.tool()(get_all_documents)  # Alias for backward compatibility
 
 # Code generation tools
 mcp.tool()(generate_verticle)

@@ -9,6 +9,8 @@ Fast MCP Local is a Model Context Protocol (MCP) server that provides:
 1. **Document Management**: Automatically indexes markdown documentation with SQLite storage and token counting
 2. **Intelligent Search**: Full-text search across indexed documents with contextual snippets
 3. **Vert.x Code Generation**: Template-based generation of Vert.x verticle code with Gradle dependencies
+   - **Platform Handlers**: Generate code for custom platform architecture (AsyncHandler, SyncHandler, MultipartHandler)
+   - **Standard Verticles**: Generate traditional AbstractVerticle implementations
 4. **Migration Guidance**: Step-by-step OpenRewrite migration guides with automated refactoring support
 5. **Code Scoring**: Rule-based codebase analysis against best practices and anti-patterns for Vert.x applications
 
@@ -18,6 +20,10 @@ Fast MCP Local is a Model Context Protocol (MCP) server that provides:
 - 🔍 Fast full-text search with SQLite
 - 🎯 Token counting using tiktoken (GPT-4 encoding)
 - ⚡ Vert.x verticle code generation (PostgreSQL, HTTP, and more)
+- 🎭 **Platform handler generation** (AsyncHandler, SyncHandler, MultipartHandler)
+  - AsyncHandler: Non-blocking operations (PostgreSQL, HTTP clients)
+  - SyncHandler: Blocking operations (SOAP, JDBC)
+  - MultipartHandler: File uploads (local storage, S3)
 - 🔄 OpenRewrite migration guides with step-by-step instructions
 - 📊 Code scoring and compliance reporting against Vert.x best practices
 - 🏗️ Template-based approach (no LLM/AI required)
@@ -79,7 +85,8 @@ Currently: **87 tests passing** covering document management, template extractio
 **Vert.x Verticle Generation Tools:**
 - `generate_verticle(verticle_type: str)`: Generate Vert.x verticle code from templates
   - Returns verticle Java code, Gradle dependencies, configuration example, and deployment code
-  - Supported types: `postgres`, `http`
+  - **Platform Handlers**: `platform-async`, `platform-sync`, `platform-multipart`
+  - Standard Verticles: `postgres`, `http`
 - `list_verticle_types()`: List all available verticle templates
 
 **Migration Tools:**
@@ -109,7 +116,12 @@ mcp list-docs
 # Get specific document
 mcp get "vertx/deployment-config.md"
 
-# Generate verticle code
+# Generate platform handler code
+mcp generate platform-async      # AsyncHandler (PostgreSQL, HTTP clients)
+mcp generate platform-sync        # SyncHandler (SOAP, JDBC)
+mcp generate platform-multipart   # MultipartHandler (file uploads)
+
+# Generate standard verticle code
 mcp generate postgres
 mcp generate http
 
@@ -131,6 +143,106 @@ mcp compliance ./verticles/ --pattern vertx-best-practices
 
 See [docs/vertx/README.md](docs/vertx/README.md) for more information on Vert.x templates.
 
+## Platform Handler Architecture
+
+This MCP server supports code generation for a **custom platform architecture** where teams implement handler interfaces instead of extending AbstractVerticle. The platform manages deployment, routing, and configuration, allowing teams to focus solely on business logic.
+
+### Handler Types
+
+**AsyncHandler** - Non-blocking operations on event loop
+- Use for: HTTP clients, async databases (PostgreSQL, MongoDB), message queues, Redis
+- Thread model: Event loop (never block)
+- Examples: PostgreSQL queries, external REST API calls
+
+**SyncHandler** - Blocking operations on worker threads
+- Use for: SOAP services, JDBC databases, file I/O, legacy systems
+- Thread model: Worker pool (blocking is safe)
+- Examples: SOAP web services, traditional JDBC queries
+
+**MultipartHandler** - File uploads on worker threads
+- Use for: File uploads, image processing, document storage
+- Thread model: Worker pool (file I/O is safe)
+- Examples: Local file uploads, S3 image uploads
+
+### Platform Pattern
+
+```java
+public class MyVerticle implements AsyncHandler {  // or SyncHandler, MultipartHandler
+    private JsonObject config;
+
+    @Override
+    public void start(Vertx vertx, JsonObject config) {
+        this.config = config;
+        // Initialize resources using config().getData()
+        JsonObject dbConfig = config().getData().getJsonObject("database");
+        // Setup connection pools, HTTP clients, etc.
+    }
+
+    @Override
+    public void handle(RoutingContext context) {
+        // Business logic here
+        // Query databases, call APIs, process files, etc.
+    }
+
+    @Override
+    public void stop() {
+        // Cleanup resources
+    }
+
+    @Override
+    public JsonObject getData() {
+        return config;
+    }
+}
+```
+
+### Configuration Structure
+
+Platform-managed configuration follows this structure:
+
+```
+config/
+└── {VerticleName}.v{version}/
+    ├── lambda.json       # Metadata: artifactId, verticleClass, endpoint, handlerType
+    └── config.json       # Endpoint-specific config: database, API settings, etc.
+```
+
+**lambda.json** example:
+```json
+{
+  "artifactId": "user-query-service",
+  "verticleClass": "com.example.verticles.UserQueryVerticle",
+  "version": "v1",
+  "endpoint": "/api/users/query",
+  "handlerType": "AsyncHandler"
+}
+```
+
+**config.json** example:
+```json
+{
+  "database": {
+    "host": "postgres.example.com",
+    "port": 5432,
+    "database": "userdb",
+    "user": "app_user",
+    "password": "${DB_PASSWORD}",
+    "maxPoolSize": 20
+  }
+}
+```
+
+### Platform vs Standard Vert.x
+
+| Aspect | Platform Approach | Standard Vert.x |
+|--------|-------------------|-----------------|
+| **Interface** | Implement handler interface | Extend AbstractVerticle |
+| **Deployment** | Managed by platform | Teams write deployment code |
+| **Routing** | Configured in lambda.json | Teams configure routes |
+| **Configuration** | Access via `config().getData()` | Access via `config()` |
+| **Thread Model** | 3 handler types (async/sync/multipart) | All verticles similar |
+| **Focus** | Business logic only | Full verticle lifecycle |
+
 ## Architecture
 
 For detailed architecture and design documentation, see:
@@ -148,7 +260,17 @@ fast-mcp-local/
 │   ├── *.md                       # General documentation
 │   ├── vertx/                     # Vert.x templates
 │   │   ├── templates/             # Verticle code templates
+│   │   │   ├── platform-async-handler.md     # Platform AsyncHandler
+│   │   │   ├── platform-sync-handler.md      # Platform SyncHandler
+│   │   │   ├── platform-multipart-handler.md # Platform MultipartHandler
+│   │   │   ├── postgres-verticle.md          # Standard PostgreSQL
+│   │   │   └── http-verticle.md              # Standard HTTP
 │   │   ├── schemas/               # Verticle metadata (JSON)
+│   │   │   ├── platform-async.json           # AsyncHandler metadata
+│   │   │   ├── platform-sync.json            # SyncHandler metadata
+│   │   │   ├── platform-multipart.json       # MultipartHandler metadata
+│   │   │   ├── postgres.json                 # PostgreSQL metadata
+│   │   │   └── http.json                     # HTTP metadata
 │   │   └── deployment-config.md   # Deployment guide
 │   ├── migrations/                # Migration guides
 │   │   ├── v1-to-v2/              # V1 to V2 migration

@@ -1,6 +1,6 @@
 # Fast MCP Local
 
-A FastMCP server that provides intelligent document management and Vert.x verticle code generation capabilities.
+A FastMCP server that provides intelligent document management, Vert.x verticle code generation, and OpenRewrite-based code migration capabilities.
 
 ## What This Does
 
@@ -9,6 +9,7 @@ Fast MCP Local is a Model Context Protocol (MCP) server that provides:
 1. **Document Management**: Automatically indexes markdown documentation with SQLite storage and token counting
 2. **Intelligent Search**: Full-text search across indexed documents with contextual snippets
 3. **Vert.x Code Generation**: Template-based generation of Vert.x verticle code with Gradle dependencies
+4. **Migration Guidance**: Step-by-step OpenRewrite migration guides with automated refactoring support
 
 ## Features
 
@@ -16,9 +17,10 @@ Fast MCP Local is a Model Context Protocol (MCP) server that provides:
 - 🔍 Fast full-text search with SQLite
 - 🎯 Token counting using tiktoken (GPT-4 encoding)
 - ⚡ Vert.x verticle code generation (PostgreSQL, HTTP, and more)
+- 🔄 OpenRewrite migration guides with step-by-step instructions
 - 🏗️ Template-based approach (no LLM/AI required)
 - 📦 Gradle dependency management
-- ✅ 69 comprehensive tests
+- ✅ 87 comprehensive tests
 
 ## Requirements
 
@@ -61,7 +63,7 @@ pytest -v        # Verbose output
 pytest --cov     # With coverage report
 ```
 
-Currently: **69 tests passing** covering document management, template extraction, metadata loading, verticle generation, and CLI interface.
+Currently: **87 tests passing** covering document management, template extraction, metadata loading, verticle generation, migration guides, and CLI interface.
 
 ## Tools
 
@@ -77,6 +79,12 @@ Currently: **69 tests passing** covering document management, template extractio
   - Returns verticle Java code, Gradle dependencies, configuration example, and deployment code
   - Supported types: `postgres`, `http`
 - `list_verticle_types()`: List all available verticle templates
+
+**Migration Tools:**
+- `list_migrations()`: List all available migration guides
+- `get_migration_metadata(migration_id: str)`: Get migration metadata (versions, dependencies, steps)
+- `get_migration_guide(migration_id: str)`: Get complete migration guide with all documentation
+- `get_migration_step(migration_id: str, step_number: int)`: Get specific step instructions
 
 ### CLI Commands (Copilot Integration)
 
@@ -97,6 +105,12 @@ mcp generate http
 
 # List available types
 mcp list-verticles
+
+# Migration tools
+mcp list-migrations
+mcp migration-info v1-to-v2
+mcp migration-guide v1-to-v2
+mcp migration-step v1-to-v2 1
 ```
 
 See [docs/vertx/README.md](docs/vertx/README.md) for more information on Vert.x templates.
@@ -113,17 +127,25 @@ For detailed architecture documentation, see:
 fast-mcp-local/
 ├── docs/                          # Documentation source
 │   ├── *.md                       # General documentation
-│   └── vertx/                     # Vert.x templates
-│       ├── templates/             # Verticle code templates
-│       ├── schemas/               # Verticle metadata (JSON)
-│       └── deployment-config.md   # Deployment guide
+│   ├── vertx/                     # Vert.x templates
+│   │   ├── templates/             # Verticle code templates
+│   │   ├── schemas/               # Verticle metadata (JSON)
+│   │   └── deployment-config.md   # Deployment guide
+│   └── migrations/                # Migration guides
+│       ├── v1-to-v2/              # V1 to V2 migration
+│       │   ├── migration-guide.md # Overview
+│       │   ├── steps.md           # Step-by-step instructions
+│       │   └── gradle-setup.md    # Gradle configuration
+│       └── schemas/               # Migration metadata (JSON)
 ├── src/fast_mcp_local/
 │   ├── server.py                  # Main MCP server
 │   ├── database.py                # SQLite operations
 │   ├── loader.py                  # Document loader
 │   ├── template_extractor.py      # Template parsing
-│   └── metadata.py                # Verticle metadata
-├── tests/                         # Test suite (69 tests)
+│   ├── metadata.py                # Verticle metadata
+│   ├── migration.py               # Migration guide management
+│   └── cli.py                     # CLI wrapper
+├── tests/                         # Test suite (87 tests)
 └── documents.db                   # SQLite database (auto-generated)
 ```
 
@@ -174,6 +196,39 @@ mcp.tool()(my_new_tool)
 1. Create `docs/vertx/templates/[type]-verticle.md` with template content
 2. Create `docs/vertx/schemas/[type].json` with metadata
 3. Restart server - template automatically available
+
+### Adding New Migrations
+
+1. Create migration directory: `docs/migrations/[migration-id]/`
+2. Add migration documentation:
+   - `migration-guide.md` - Overview and introduction
+   - `steps.md` - Step-by-step instructions
+   - `gradle-setup.md` - Gradle configuration reference
+3. Create metadata: `docs/migrations/schemas/[migration-id].json`
+4. Restart server - migration automatically available via CLI and MCP tools
+
+Example migration metadata:
+```json
+{
+  "migration_id": "v1-to-v2",
+  "name": "V1 to V2 Migration",
+  "description": "Migrate from version 1.x to 2.x",
+  "source_version": "1.x",
+  "target_version": "2.x",
+  "openrewrite_dependency": {
+    "group": "com.example",
+    "artifact": "migration-recipes",
+    "version": "1.0.0",
+    "recipe_class": "com.example.V1ToV2Migration"
+  },
+  "prerequisites": {
+    "java_version": "11+",
+    "gradle_version": "7.0+"
+  },
+  "total_steps": 5,
+  "estimated_time": "15-20 minutes"
+}
+```
 
 ## License
 

@@ -8,6 +8,7 @@ from .database import DocumentDatabase
 from .loader import initialize_documents
 from .template_extractor import TemplateExtractor
 from .metadata import VerticleMetadata
+from . import migration
 
 # Initialize FastMCP server
 mcp = FastMCP("fast-mcp-local")
@@ -189,12 +190,62 @@ def list_verticle_types() -> str:
     return json.dumps(types, indent=2)
 
 
+def list_migrations() -> str:
+    """List all available migration guides.
+
+    Returns:
+        JSON array of migration metadata
+    """
+    return migration.list_migrations()
+
+
+def get_migration_metadata(migration_id: str) -> str:
+    """Get migration metadata (versions, dependencies, steps count).
+
+    Args:
+        migration_id: The migration identifier (e.g., 'v1-to-v2')
+
+    Returns:
+        JSON string with migration metadata or error
+    """
+    return migration.get_migration_metadata(migration_id)
+
+
+def get_migration_guide(migration_id: str) -> str:
+    """Get full migration guide with all documentation.
+
+    Args:
+        migration_id: The migration identifier (e.g., 'v1-to-v2')
+
+    Returns:
+        JSON string with complete migration guide or error
+    """
+    return migration.get_migration_guide(migration_id)
+
+
+def get_migration_step(migration_id: str, step_number: int) -> str:
+    """Get specific step instructions from migration guide.
+
+    Args:
+        migration_id: The migration identifier (e.g., 'v1-to-v2')
+        step_number: The step number (1-based)
+
+    Returns:
+        JSON string with step content or error
+    """
+    return migration.get_migration_step(migration_id, step_number)
+
+
 # Register tools with MCP
 mcp.tool()(search_documents)
 mcp.tool()(get_all_documents)
 mcp.tool()(get_document)
 mcp.tool()(generate_verticle)
 mcp.tool()(list_verticle_types)
+mcp.tool()(list_migrations)
+mcp.tool()(get_migration_metadata)
+mcp.tool()(get_migration_guide)
+mcp.tool()(get_migration_step)
 
 
 if __name__ == "__main__":

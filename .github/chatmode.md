@@ -239,6 +239,169 @@ This file defines available tools for AI assistants (GitHub Copilot, Claude, etc
           "action": "Quick search and provide concise answer from results"
         }
       ]
+    },
+    {
+      "name": "list_migrations",
+      "description": "List all available migration guides with metadata",
+      "command": "mcp list-migrations",
+      "properties": {},
+      "returns": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "migration_id": {"type": "string"},
+            "name": {"type": "string"},
+            "description": {"type": "string"},
+            "source_version": {"type": "string"},
+            "target_version": {"type": "string"},
+            "openrewrite_dependency": {"type": "object"},
+            "prerequisites": {"type": "object"},
+            "total_steps": {"type": "integer"},
+            "estimated_time": {"type": "string"}
+          }
+        }
+      },
+      "use_cases": [
+        "User asks about available migrations",
+        "User wants to see migration options",
+        "User asks 'what migrations can I run?'"
+      ],
+      "examples": [
+        {
+          "user_query": "What migrations are available?",
+          "command": "mcp list-migrations",
+          "action": "List all migrations with versions and descriptions"
+        }
+      ]
+    },
+    {
+      "name": "get_migration_metadata",
+      "description": "Get migration metadata including versions, dependencies, prerequisites, and steps count",
+      "command": "mcp migration-info {migration_id}",
+      "properties": {
+        "migration_id": {
+          "type": "string",
+          "description": "Migration identifier",
+          "required": true,
+          "examples": ["v1-to-v2"]
+        }
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "migration_id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "source_version": {"type": "string"},
+          "target_version": {"type": "string"},
+          "openrewrite_dependency": {
+            "type": "object",
+            "properties": {
+              "group": {"type": "string"},
+              "artifact": {"type": "string"},
+              "version": {"type": "string"},
+              "recipe_class": {"type": "string"}
+            }
+          },
+          "prerequisites": {"type": "object"},
+          "total_steps": {"type": "integer"},
+          "estimated_time": {"type": "string"}
+        }
+      },
+      "use_cases": [
+        "User wants to know migration requirements",
+        "User asks about migration dependencies",
+        "User wants to see migration overview"
+      ],
+      "examples": [
+        {
+          "user_query": "What are the requirements for v1 to v2 migration?",
+          "command": "mcp migration-info v1-to-v2",
+          "action": "Show prerequisites, dependencies, and estimated time"
+        }
+      ]
+    },
+    {
+      "name": "get_migration_guide",
+      "description": "Get complete migration guide with all documentation including overview, steps, and gradle setup",
+      "command": "mcp migration-guide {migration_id}",
+      "properties": {
+        "migration_id": {
+          "type": "string",
+          "description": "Migration identifier",
+          "required": true,
+          "examples": ["v1-to-v2"]
+        }
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "migration_id": {"type": "string"},
+          "metadata": {"type": "object"},
+          "guide": {"type": "string", "description": "Overview and migration guide markdown"},
+          "steps": {"type": "string", "description": "Step-by-step instructions markdown"},
+          "gradle_setup": {"type": "string", "description": "Gradle configuration reference"}
+        }
+      },
+      "use_cases": [
+        "User wants complete migration documentation",
+        "User asks for full migration guide",
+        "User needs all migration information"
+      ],
+      "examples": [
+        {
+          "user_query": "Show me the complete v1 to v2 migration guide",
+          "command": "mcp migration-guide v1-to-v2",
+          "action": "Present full migration guide with all sections"
+        }
+      ]
+    },
+    {
+      "name": "get_migration_step",
+      "description": "Get specific step instructions from migration guide with detailed actions and troubleshooting",
+      "command": "mcp migration-step {migration_id} {step_number}",
+      "properties": {
+        "migration_id": {
+          "type": "string",
+          "description": "Migration identifier",
+          "required": true,
+          "examples": ["v1-to-v2"]
+        },
+        "step_number": {
+          "type": "integer",
+          "description": "Step number (1-based)",
+          "required": true,
+          "minimum": 1,
+          "examples": [1, 2, 3, 4, 5]
+        }
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "migration_id": {"type": "string"},
+          "step_number": {"type": "integer"},
+          "total_steps": {"type": "integer"},
+          "content": {"type": "string", "description": "Step instructions in markdown"}
+        }
+      },
+      "use_cases": [
+        "User wants to follow migration step-by-step",
+        "User asks for specific migration step",
+        "User needs detailed instructions for current step"
+      ],
+      "examples": [
+        {
+          "user_query": "Show me step 1 of the v1 to v2 migration",
+          "command": "mcp migration-step v1-to-v2 1",
+          "action": "Display step 1 instructions with actions and verification"
+        },
+        {
+          "user_query": "What's the next step in migration?",
+          "command": "mcp migration-step v1-to-v2 {current_step + 1}",
+          "action": "Show next step instructions and guide user through it"
+        }
+      ]
     }
   ]
 }
@@ -309,6 +472,19 @@ I found relevant documentation:
 
 ```
 User asks a question
+  ├─ Migration-related?
+  │   ├─ "what migrations", "available migrations"?
+  │   │   └─ USE: list_migrations
+  │   │
+  │   ├─ "migration requirements", "migration info"?
+  │   │   └─ USE: get_migration_metadata
+  │   │
+  │   ├─ "full migration guide", "complete guide"?
+  │   │   └─ USE: get_migration_guide
+  │   │
+  │   └─ "step X", "next step", specific step number?
+  │       └─ USE: get_migration_step
+  │
   ├─ Contains "generate", "create", "make" + verticle type?
   │   └─ USE: generate_verticle
   │
@@ -340,12 +516,14 @@ If a tool returns an error in JSON:
 
 ## Context
 
-- **Project**: Fast MCP Local - MCP server with document management and Vert.x code generation
-- **69 tests**: Comprehensive test coverage
-- **11 documents**: Indexed markdown documentation
+- **Project**: Fast MCP Local - MCP server with document management, Vert.x code generation, and OpenRewrite migrations
+- **87 tests**: Comprehensive test coverage
+- **14 documents**: Indexed markdown documentation (including migration guides)
 - **2 verticle types**: postgres, http (extensible)
+- **1 migration**: v1-to-v2 OpenRewrite migration (extensible)
 - **Template-based**: No LLM/AI in generation, pure template extraction
 - **Gradle-first**: All dependencies in Gradle format
+- **Migration support**: Guided OpenRewrite-based code migrations with step-by-step instructions
 
 ## Performance Notes
 
@@ -356,11 +534,13 @@ If a tool returns an error in JSON:
 
 ## File Locations
 
-- Templates: `docs/vertx/templates/`
-- Schemas: `docs/vertx/schemas/`
-- Deployment guide: `docs/vertx/deployment-config.md`
-- Tests: `tests/` (69 tests)
+- Verticle templates: `docs/vertx/templates/`
+- Verticle schemas: `docs/vertx/schemas/`
+- Migration guides: `docs/migrations/*/`
+- Migration schemas: `docs/migrations/schemas/`
+- Tests: `tests/` (87 tests)
 - CLI: `src/fast_mcp_local/cli.py`
+- Server: `src/fast_mcp_local/server.py`
 
 ---
 

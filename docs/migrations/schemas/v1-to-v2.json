@@ -1,0 +1,24 @@
+{
+  "migration_id": "v1-to-v2",
+  "name": "V1 to V2 Migration",
+  "description": "Migrate your codebase from version 1.x to 2.x using OpenRewrite recipes",
+  "source_version": "1.x",
+  "target_version": "2.x",
+  "openrewrite_dependency": {
+    "group": "com.example",
+    "artifact": "migration-recipes",
+    "version": "1.0.0",
+    "recipe_class": "com.example.V1ToV2Migration"
+  },
+  "prerequisites": {
+    "java_version": "11+",
+    "gradle_version": "7.0+",
+    "git_status": "clean (recommended)"
+  },
+  "total_steps": 5,
+  "estimated_time": "15-20 minutes",
+  "tags": ["openrewrite", "migration", "automated"],
+  "documentation_urls": [
+    "https://docs.openrewrite.org"
+  ]
+}

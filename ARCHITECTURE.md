@@ -2,7 +2,7 @@
 
 ## Overview
 
-Fast MCP Local is a Model Context Protocol (MCP) server that provides intelligent document management, querying capabilities, and Vert.x verticle code generation. It automatically indexes markdown documentation, stores it in SQLite with token counts, and exposes tools for searching, retrieving content, and generating Vert.x verticles from templates.
+Fast MCP Local is a Model Context Protocol (MCP) server that provides intelligent document management, querying capabilities, Vert.x verticle code generation, and OpenRewrite-based code migration guidance. It automatically indexes markdown documentation, stores it in SQLite with token counts, and exposes tools for searching, retrieving content, generating Vert.x verticles from templates, and guiding users through step-by-step code migrations.
 
 ## System Architecture
 
@@ -32,11 +32,19 @@ graph TB
             T3[get_document]
             T4[generate_verticle]
             T5[list_verticle_types]
+            T6[list_migrations]
+            T7[get_migration_metadata]
+            T8[get_migration_guide]
+            T9[get_migration_step]
         end
 
         subgraph "Vert.x Modules"
             TE[Template Extractor<br/>template_extractor.py]
             Meta[Metadata Loader<br/>metadata.py]
+        end
+
+        subgraph "Migration Modules"
+            MigMod[Migration Module<br/>migration.py]
         end
     end
 
@@ -51,6 +59,10 @@ graph TB
     T4 --> TE
     T4 --> Meta
     T5 --> Meta
+    T6 --> MigMod
+    T7 --> MigMod
+    T8 --> MigMod
+    T9 --> MigMod
 
     Loader -->|Reads| Files
     Loader -->|Counts Tokens| Tokenizer
@@ -59,6 +71,7 @@ graph TB
 
     TE -->|Parses| Files
     Meta -->|Reads| Files
+    MigMod -->|Reads| Files
 
     style Server fill:#e1f5ff
     style DB fill:#fff3cd
@@ -66,6 +79,7 @@ graph TB
     style Files fill:#f8d7da
     style TE fill:#fce7f3
     style Meta fill:#fce7f3
+    style MigMod fill:#e7f3fc
 ```
 
 ## Data Flow
@@ -141,11 +155,16 @@ graph TB
             T3[get_document]
             T4[generate_verticle]
             T5[list_verticle_types]
+            T6[list_migrations]
+            T7[get_migration_metadata]
+            T8[get_migration_guide]
+            T9[get_migration_step]
         end
 
         DB[Database]
         TE[Template Extractor]
         Meta[Metadata]
+        MigMod[Migration Module]
     end
 
     User -->|mcp command| Terminal
@@ -156,6 +175,10 @@ graph TB
     CLI -->|get| T3
     CLI -->|generate| T4
     CLI -->|list-verticles| T5
+    CLI -->|list-migrations| T6
+    CLI -->|migration-info| T7
+    CLI -->|migration-guide| T8
+    CLI -->|migration-step| T9
 
     T1 --> DB
     T2 --> DB
@@ -163,6 +186,10 @@ graph TB
     T4 --> TE
     T4 --> Meta
     T5 --> Meta
+    T6 --> MigMod
+    T7 --> MigMod
+    T8 --> MigMod
+    T9 --> MigMod
 
     DB -->|JSON| T1
     T1 -->|JSON| CLI
@@ -253,6 +280,10 @@ sequenceDiagram
 | `mcp generate <type>` | `generate_verticle()` | Generate verticle code from template |
 | `mcp list-verticles` | `list_verticle_types()` | List available verticle types |
 | `mcp ask <question>` | `search_documents()` | Quick search (limit=5) |
+| `mcp list-migrations` | `list_migrations()` | List all available migration guides |
+| `mcp migration-info <id>` | `get_migration_metadata()` | Get migration metadata and prerequisites |
+| `mcp migration-guide <id>` | `get_migration_guide()` | Get complete migration guide |
+| `mcp migration-step <id> <n>` | `get_migration_step()` | Get specific migration step instructions |
 
 ## Component Details
 
@@ -273,6 +304,10 @@ get_all_documents()        # List tool
 get_document()             # Retrieve tool
 generate_verticle()        # Generate Vert.x verticle code
 list_verticle_types()      # List available verticle templates
+list_migrations()          # List migration guides
+get_migration_metadata()   # Get migration info
+get_migration_guide()      # Get full migration guide
+get_migration_step()       # Get specific migration step
 ```
 
 **Dependencies:**
@@ -281,6 +316,7 @@ list_verticle_types()      # List available verticle templates
 - Loader module
 - Template Extractor module
 - Metadata module
+- Migration module
 
 ### 2. Database Module (database.py)
 
@@ -397,6 +433,10 @@ get()                 # Get document content
 generate()            # Generate verticle code
 list_verticles()      # List verticle types
 ask()                 # Quick search alias
+list_migrations()     # List migration guides
+migration_info()      # Get migration metadata
+migration_guide()     # Get full migration guide
+migration_step()      # Get specific migration step
 ```
 
 **Framework:** Click (Python CLI framework)
@@ -420,6 +460,73 @@ mcp generate http
 - **Shell Scripts**: Automate documentation queries
 - **CI/CD**: Generate code in build pipelines
 - **Development**: Quick access to docs and code generation
+
+### 7. Migration Module (migration.py)
+
+**Responsibilities:**
+- Load migration guide metadata from JSON schemas
+- Provide step-by-step migration instructions
+- Extract specific migration steps from markdown
+- List available migrations with metadata
+- Support OpenRewrite-based code migrations
+
+**Key Functions:**
+```python
+list_migrations()           # List all available migrations
+get_migration_metadata()    # Load metadata for specific migration
+get_migration_guide()       # Get complete migration guide
+get_migration_step()        # Extract specific step instructions
+extract_step_from_markdown()# Parse step from markdown content
+list_migration_ids()        # Get list of migration IDs
+```
+
+**Migration Structure:**
+```
+docs/migrations/
+├── v1-to-v2/
+│   ├── migration-guide.md       # Overview and introduction
+│   ├── steps.md                 # Step-by-step instructions
+│   └── gradle-setup.md          # Gradle configuration reference
+└── schemas/
+    └── v1-to-v2.json            # Migration metadata
+```
+
+**Metadata Schema (schemas/*.json):**
+```json
+{
+  "migration_id": "v1-to-v2",
+  "name": "V1 to V2 Migration",
+  "description": "Migrate from version 1.x to 2.x",
+  "source_version": "1.x",
+  "target_version": "2.x",
+  "openrewrite_dependency": {
+    "group": "com.example",
+    "artifact": "migration-recipes",
+    "version": "1.0.0",
+    "recipe_class": "com.example.V1ToV2Migration"
+  },
+  "prerequisites": {
+    "java_version": "11+",
+    "gradle_version": "7.0+"
+  },
+  "total_steps": 5,
+  "estimated_time": "15-20 minutes",
+  "tags": ["openrewrite", "migration", "automated"]
+}
+```
+
+**Design Principles:**
+1. **Document-Based**: Migrations are markdown guides, not code execution
+2. **Step-by-Step**: Clear, numbered steps with verification commands
+3. **Metadata-Driven**: JSON schemas provide structured information
+4. **Extensible**: Easy to add new migrations by creating new directories
+5. **Tool-Agnostic**: Works with any OpenRewrite recipe repository
+
+**Use Cases:**
+- **Guided Migrations**: Step users through complex code migrations
+- **OpenRewrite Integration**: Provide instructions for OpenRewrite recipes
+- **Version Upgrades**: Help teams migrate between framework versions
+- **Best Practices**: Embed migration best practices in documentation
 
 ## Database Schema
 
@@ -566,6 +673,116 @@ def list_verticle_types() -> str
 ]
 ```
 
+### list_migrations
+
+**Purpose:** List all available migration guides with metadata
+
+**Signature:**
+```python
+def list_migrations() -> str
+```
+
+**Returns:**
+```json
+[
+  {
+    "migration_id": "v1-to-v2",
+    "name": "V1 to V2 Migration",
+    "description": "Migrate from version 1.x to 2.x",
+    "source_version": "1.x",
+    "target_version": "2.x",
+    "openrewrite_dependency": {...},
+    "prerequisites": {...},
+    "total_steps": 5,
+    "estimated_time": "15-20 minutes"
+  }
+]
+```
+
+### get_migration_metadata
+
+**Purpose:** Get detailed metadata for a specific migration
+
+**Signature:**
+```python
+def get_migration_metadata(migration_id: str) -> str
+```
+
+**Parameters:**
+- `migration_id`: Migration identifier (e.g., "v1-to-v2")
+
+**Returns:**
+```json
+{
+  "migration_id": "v1-to-v2",
+  "name": "V1 to V2 Migration",
+  "description": "Migrate from version 1.x to 2.x",
+  "source_version": "1.x",
+  "target_version": "2.x",
+  "openrewrite_dependency": {
+    "group": "com.example",
+    "artifact": "migration-recipes",
+    "version": "1.0.0",
+    "recipe_class": "com.example.V1ToV2Migration"
+  },
+  "prerequisites": {
+    "java_version": "11+",
+    "gradle_version": "7.0+"
+  },
+  "total_steps": 5,
+  "estimated_time": "15-20 minutes"
+}
+```
+
+### get_migration_guide
+
+**Purpose:** Get complete migration guide with all documentation
+
+**Signature:**
+```python
+def get_migration_guide(migration_id: str) -> str
+```
+
+**Parameters:**
+- `migration_id`: Migration identifier (e.g., "v1-to-v2")
+
+**Returns:**
+```json
+{
+  "migration_id": "v1-to-v2",
+  "metadata": {...},
+  "guide": "# V1 to V2 Migration Guide\n\n## Overview...",
+  "steps": "# Migration Steps\n\n## Step 1:...",
+  "gradle_setup": "# Gradle Setup\n\n..."
+}
+```
+
+### get_migration_step
+
+**Purpose:** Get specific step instructions from migration guide
+
+**Signature:**
+```python
+def get_migration_step(migration_id: str, step_number: int) -> str
+```
+
+**Parameters:**
+- `migration_id`: Migration identifier (e.g., "v1-to-v2")
+- `step_number`: Step number (1-based)
+
+**Returns:**
+```json
+{
+  "migration_id": "v1-to-v2",
+  "step_number": 1,
+  "total_steps": 5,
+  "content": "## Step 1: Add OpenRewrite Plugin\n\n### Action\n\n..."
+}
+```
+
+**Use Case:**
+Step-by-step guidance through migration process. Copilot or users can request each step sequentially to complete the migration.
+
 ## Token Counting
 
 ### Encoding: cl100k_base
@@ -593,36 +810,46 @@ token_count = len(tokens)
 fast-mcp-local/
 ├── docs/                       # Source documents
 │   ├── *.md                    # General documentation
-│   └── vertx/                  # Vert.x templates
-│       ├── README.md
-│       ├── templates/          # Verticle code templates
-│       │   ├── postgres-verticle.md
-│       │   └── http-verticle.md
-│       ├── schemas/            # Verticle metadata (JSON)
-│       │   ├── postgres.json
-│       │   └── http.json
-│       └── deployment-config.md
+│   ├── vertx/                  # Vert.x templates
+│   │   ├── README.md
+│   │   ├── templates/          # Verticle code templates
+│   │   │   ├── postgres-verticle.md
+│   │   │   └── http-verticle.md
+│   │   ├── schemas/            # Verticle metadata (JSON)
+│   │   │   ├── postgres.json
+│   │   │   └── http.json
+│   │   └── deployment-config.md
+│   └── migrations/             # Migration guides (NEW)
+│       ├── v1-to-v2/           # V1 to V2 migration
+│       │   ├── migration-guide.md
+│       │   ├── steps.md
+│       │   └── gradle-setup.md
+│       └── schemas/            # Migration metadata (JSON)
+│           └── v1-to-v2.json
 │
 ├── src/fast_mcp_local/        # Source code
 │   ├── __init__.py
 │   ├── server.py              # Main server
-│   ├── cli.py                 # CLI wrapper (NEW)
+│   ├── cli.py                 # CLI wrapper
 │   ├── database.py            # DB operations
 │   ├── loader.py              # Document loader
 │   ├── template_extractor.py  # Template parsing
-│   └── metadata.py            # Verticle metadata
+│   ├── metadata.py            # Verticle metadata
+│   └── migration.py           # Migration guide management (NEW)
 │
-├── tests/                     # Test suite (69 tests)
+├── tests/                     # Test suite (87 tests)
 │   ├── test_server.py
-│   ├── test_cli.py            # CLI tests (NEW)
+│   ├── test_cli.py            # CLI tests (15 tests)
 │   ├── test_database.py
 │   ├── test_loader.py
 │   ├── test_template_extractor.py
 │   ├── test_metadata.py
+│   ├── test_migration.py      # Migration tests (NEW - 18 tests)
 │   └── test_verticle_tools.py
 │
 ├── .github/
-│   └── copilot-instructions.md  # Copilot integration (NEW)
+│   ├── chatmode.md            # JSON schema tool definitions (NEW)
+│   └── copilot-instructions.md  # Symlink to chatmode.md
 │
 ├── documents.db              # SQLite database (gitignored)
 ├── ARCHITECTURE.md           # This file
@@ -707,14 +934,15 @@ Using OpenAI's tiktoken library:
 
 ### Test Coverage
 
-- **Unit Tests:** 69 tests covering all modules
+- **Unit Tests:** 87 tests covering all modules
 - **Database Tests:** 13 tests for CRUD operations
 - **Loader Tests:** 12 tests for file operations
 - **Server Tests:** 1 test for tool imports
-- **Template Extractor Tests:** 13 tests for code extraction
+- **Template Extractor Tests:** 11 tests for code extraction
 - **Metadata Tests:** 10 tests for metadata loading
 - **Verticle Tools Tests:** 7 tests for end-to-end generation
 - **CLI Tests:** 15 tests for command-line interface
+- **Migration Tests:** 18 tests for migration guide management (NEW)
 
 ### Test Structure
 
@@ -723,9 +951,10 @@ tests/
 ├── test_database.py            # Database operations
 ├── test_loader.py              # Document loading
 ├── test_server.py              # Server tool imports
-├── test_cli.py                 # CLI commands (NEW)
+├── test_cli.py                 # CLI commands
 ├── test_template_extractor.py  # Template parsing
 ├── test_metadata.py            # Metadata loading
+├── test_migration.py           # Migration guides (NEW)
 └── test_verticle_tools.py      # Verticle generation
 ```
 
@@ -775,7 +1004,9 @@ The architecture is designed for extensibility:
 - **Additional Tools:** Summarization, extraction
 - **Custom Encodings:** Different tokenizers
 - **New Verticle Types:** Add templates and metadata for new verticle types
+- **New Migrations:** Add migration guides for any framework or version upgrade
 - **Multi-language Support:** Extend to support Kotlin, Groovy verticles
+- **Migration Recipes:** Support various OpenRewrite recipe repositories
 
 ## Deployment
 

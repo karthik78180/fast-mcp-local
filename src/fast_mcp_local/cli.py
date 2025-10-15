@@ -11,7 +11,11 @@ from .server import (
     get_all_documents,
     get_document,
     generate_verticle,
-    list_verticle_types
+    list_verticle_types,
+    list_migrations,
+    get_migration_metadata,
+    get_migration_guide,
+    get_migration_step
 )
 
 
@@ -99,6 +103,55 @@ def ask(query):
         mcp ask "postgres configuration"
     """
     result = search_documents(query, limit=5)
+    click.echo(result)
+
+
+@cli.command(name='list-migrations')
+def list_migrations_cmd():
+    """List all available migration guides.
+
+    Example:
+        mcp list-migrations
+    """
+    result = list_migrations()
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('migration_id')
+def migration_info(migration_id):
+    """Get migration metadata (versions, dependencies, steps count).
+
+    Example:
+        mcp migration-info v1-to-v2
+    """
+    result = get_migration_metadata(migration_id)
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('migration_id')
+def migration_guide(migration_id):
+    """Get full migration guide with all documentation.
+
+    Example:
+        mcp migration-guide v1-to-v2
+    """
+    result = get_migration_guide(migration_id)
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('migration_id')
+@click.argument('step_number', type=int)
+def migration_step(migration_id, step_number):
+    """Get specific step instructions from migration guide.
+
+    Example:
+        mcp migration-step v1-to-v2 1
+        mcp migration-step v1-to-v2 3
+    """
+    result = get_migration_step(migration_id, step_number)
     click.echo(result)
 
 

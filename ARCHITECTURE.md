@@ -2,7 +2,7 @@
 
 ## Overview
 
-Fast MCP Local is a Model Context Protocol (MCP) server that provides intelligent document management and querying capabilities. It automatically indexes markdown documentation, stores it in SQLite with token counts, and exposes tools for searching and retrieving content.
+Fast MCP Local is a Model Context Protocol (MCP) server that provides intelligent document management, querying capabilities, and Vert.x verticle code generation. It automatically indexes markdown documentation, stores it in SQLite with token counts, and exposes tools for searching, retrieving content, and generating Vert.x verticles from templates.
 
 ## System Architecture
 
@@ -30,6 +30,13 @@ graph TB
             T1[search_documents]
             T2[get_all_documents]
             T3[get_document]
+            T4[generate_verticle]
+            T5[list_verticle_types]
+        end
+
+        subgraph "Vert.x Modules"
+            TE[Template Extractor<br/>template_extractor.py]
+            Meta[Metadata Loader<br/>metadata.py]
         end
     end
 
@@ -41,16 +48,24 @@ graph TB
     T1 --> DB
     T2 --> DB
     T3 --> DB
+    T4 --> TE
+    T4 --> Meta
+    T5 --> Meta
 
     Loader -->|Reads| Files
     Loader -->|Counts Tokens| Tokenizer
     Loader -->|Stores| DB
     DB -->|Queries| SQLite
 
+    TE -->|Parses| Files
+    Meta -->|Reads| Files
+
     style Server fill:#e1f5ff
     style DB fill:#fff3cd
     style SQLite fill:#d4edda
     style Files fill:#f8d7da
+    style TE fill:#fce7f3
+    style Meta fill:#fce7f3
 ```
 
 ## Data Flow
@@ -117,12 +132,16 @@ _initialize_database()     # Setup DB and load docs
 search_documents()         # Search tool
 get_all_documents()        # List tool
 get_document()             # Retrieve tool
+generate_verticle()        # Generate Vert.x verticle code
+list_verticle_types()      # List available verticle templates
 ```
 
 **Dependencies:**
 - FastMCP framework
 - Database module
 - Loader module
+- Template Extractor module
+- Metadata module
 
 ### 2. Database Module (database.py)
 
@@ -173,6 +192,55 @@ count_tokens()             # Calculate token count
 2. Read each file's content
 3. Calculate tokens using tiktoken
 4. Store in database with relative path
+
+### 4. Template Extractor Module (template_extractor.py)
+
+**Responsibilities:**
+- Parse markdown templates
+- Extract fenced code blocks (Java, Gradle, JSON)
+- Extract sections by heading
+- Support multiple code block types
+
+**Key Methods:**
+```python
+extract_code_blocks()      # Extract all code blocks by language
+extract_description()      # Get description section
+extract_section()          # Get arbitrary section content
+```
+
+**Process:**
+1. Use regex to find fenced code blocks (```language)
+2. Categorize by language (java, gradle, json)
+3. Identify deployment examples vs verticle code
+4. Return structured dictionary
+
+### 5. Metadata Module (metadata.py)
+
+**Responsibilities:**
+- Load verticle metadata from JSON schemas
+- Cache metadata for performance
+- List all available verticle types
+- Validate metadata structure
+
+**Key Methods:**
+```python
+load_metadata()            # Load metadata for specific type
+list_all_types()           # Get all available verticles
+clear_cache()              # Clear metadata cache
+```
+
+**Metadata Schema (schemas/*.json):**
+```json
+{
+  "type": "postgres",
+  "name": "PostgreSQL Verticle",
+  "description": "Database client verticle",
+  "template_file": "templates/postgres-verticle.md",
+  "gradle_dependencies": ["io.vertx:vertx-pg-client:4.5.0"],
+  "config_keys": ["postgres.host", "postgres.port"],
+  "use_cases": ["CRUD operations", "Connection pooling"]
+}
+```
 
 ## Database Schema
 
@@ -264,6 +332,61 @@ def get_document(filename: str) -> str
 }
 ```
 
+### generate_verticle
+
+**Purpose:** Generate Vert.x verticle code from templates
+
+**Signature:**
+```python
+def generate_verticle(verticle_type: str) -> str
+```
+
+**Parameters:**
+- `verticle_type`: Type of verticle (e.g., "postgres", "http", "redis")
+
+**Returns:**
+```json
+{
+  "type": "postgres",
+  "name": "PostgreSQL Verticle",
+  "description": "Database client verticle...",
+  "verticle_code": "package com.example.verticles;\n...",
+  "gradle_dependencies": ["io.vertx:vertx-core:4.5.0", ...],
+  "config_example": {"postgres": {"host": "localhost", ...}},
+  "deployment_example": "DeploymentOptions options = ...",
+  "use_cases": ["CRUD operations", ...]
+}
+```
+
+**Process:**
+1. Load metadata from `schemas/{verticle_type}.json`
+2. Read template file specified in metadata
+3. Extract code blocks using TemplateExtractor
+4. Parse JSON configuration
+5. Return structured response
+
+### list_verticle_types
+
+**Purpose:** List all available verticle templates
+
+**Signature:**
+```python
+def list_verticle_types() -> str
+```
+
+**Returns:**
+```json
+[
+  {
+    "type": "postgres",
+    "name": "PostgreSQL Verticle",
+    "description": "Database client verticle...",
+    "gradle_deps": ["io.vertx:vertx-pg-client:4.5.0"]
+  },
+  ...
+]
+```
+
 ## Token Counting
 
 ### Encoding: cl100k_base
@@ -290,26 +413,36 @@ token_count = len(tokens)
 ```
 fast-mcp-local/
 ├── docs/                       # Source documents
-│   ├── mcp-overview.md
-│   ├── tutorials/
-│   │   └── getting-started.md
-│   └── api/
-│       └── reference/
-│           └── tools.md
+│   ├── *.md                    # General documentation
+│   └── vertx/                  # Vert.x templates
+│       ├── README.md
+│       ├── templates/          # Verticle code templates
+│       │   ├── postgres-verticle.md
+│       │   └── http-verticle.md
+│       ├── schemas/            # Verticle metadata (JSON)
+│       │   ├── postgres.json
+│       │   └── http.json
+│       └── deployment-config.md
 │
 ├── src/fast_mcp_local/        # Source code
 │   ├── __init__.py
 │   ├── server.py              # Main server
 │   ├── database.py            # DB operations
-│   └── loader.py              # Document loader
+│   ├── loader.py              # Document loader
+│   ├── template_extractor.py  # Template parsing
+│   └── metadata.py            # Verticle metadata
 │
-├── tests/                     # Test suite
+├── tests/                     # Test suite (54 tests)
 │   ├── test_server.py
 │   ├── test_database.py
-│   └── test_loader.py
+│   ├── test_loader.py
+│   ├── test_template_extractor.py
+│   ├── test_metadata.py
+│   └── test_verticle_tools.py
 │
 ├── documents.db              # SQLite database (gitignored)
 ├── ARCHITECTURE.md           # This file
+├── ARCHITECTURE-VERTX-SIMPLE.md  # Vert.x extension design
 └── README.md                 # User guide
 ```
 
@@ -390,18 +523,24 @@ Using OpenAI's tiktoken library:
 
 ### Test Coverage
 
-- **Unit Tests:** 30 tests covering all modules
+- **Unit Tests:** 54 tests covering all modules
 - **Database Tests:** 13 tests for CRUD operations
 - **Loader Tests:** 12 tests for file operations
-- **Server Tests:** 5 tests for basic tools
+- **Server Tests:** 1 test for tool imports
+- **Template Extractor Tests:** 13 tests for code extraction
+- **Metadata Tests:** 10 tests for metadata loading
+- **Verticle Tools Tests:** 7 tests for end-to-end generation
 
 ### Test Structure
 
 ```
 tests/
-├── test_database.py       # Database operations
-├── test_loader.py         # Document loading
-└── test_server.py         # Server tools
+├── test_database.py            # Database operations
+├── test_loader.py              # Document loading
+├── test_server.py              # Server tool imports
+├── test_template_extractor.py  # Template parsing
+├── test_metadata.py            # Metadata loading
+└── test_verticle_tools.py      # Verticle generation
 ```
 
 ### Running Tests
@@ -449,6 +588,8 @@ The architecture is designed for extensibility:
 - **Multiple Databases:** PostgreSQL, MongoDB
 - **Additional Tools:** Summarization, extraction
 - **Custom Encodings:** Different tokenizers
+- **New Verticle Types:** Add templates and metadata for new verticle types
+- **Multi-language Support:** Extend to support Kotlin, Groovy verticles
 
 ## Deployment
 
@@ -490,9 +631,22 @@ python3 -m fast_mcp_local.server
 - **Cause:** Invalid UTF-8
 - **Solution:** Check file encoding, handle errors gracefully
 
+## Vert.x Code Generation
+
+For detailed information about the Vert.x verticle code generation feature, see:
+- [ARCHITECTURE-VERTX-SIMPLE.md](ARCHITECTURE-VERTX-SIMPLE.md) - Detailed Vert.x extension design
+- [docs/vertx/README.md](docs/vertx/README.md) - Verticle templates guide
+
+**Key Features:**
+- Template-based code generation (no LLM required)
+- Gradle dependency management
+- Support for PostgreSQL, HTTP verticles
+- Easily extensible to new verticle types
+
 ## References
 
 - [Model Context Protocol Specification](https://modelcontextprotocol.io)
 - [FastMCP Documentation](https://github.com/jlowin/fastmcp)
 - [Tiktoken Documentation](https://github.com/openai/tiktoken)
 - [SQLite Documentation](https://sqlite.org/docs.html)
+- [Vert.x Documentation](https://vertx.io/docs/)

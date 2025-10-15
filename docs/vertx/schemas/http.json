@@ -1,0 +1,21 @@
+{
+  "type": "http",
+  "name": "HTTP Server Verticle",
+  "description": "REST API server verticle using Vert.x Web router with middleware support",
+  "template_file": "templates/http-verticle.md",
+  "gradle_dependencies": [
+    "io.vertx:vertx-core:4.5.0",
+    "io.vertx:vertx-web:4.5.0"
+  ],
+  "config_keys": [
+    "http.host",
+    "http.port"
+  ],
+  "use_cases": [
+    "REST API servers",
+    "Microservices HTTP endpoints",
+    "Web application backends",
+    "API gateways",
+    "Health check endpoints"
+  ]
+}

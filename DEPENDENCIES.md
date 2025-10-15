@@ -1,6 +1,6 @@
 # File Dependencies for MCP Server Features
 
-## Current Features (Minimal Version)
+## Current Features (Full Version)
 
 ### ✅ Feature 1: Code Generation (`generate_verticle`)
 
@@ -77,41 +77,78 @@ mcp search "async handler"
 
 ---
 
-## ❌ Removed Features (Not in Minimal Version)
+### ✅ Feature 3: Migration Guides (`list_migrations`, `get_migration_guide`)
 
-### Migration System (Removed)
+**What it does**: Provides step-by-step OpenRewrite migration guides
 
-**Previously relied on**:
+**Files it relies on**:
+
 ```
 docs/migrations/
-├── schemas/
-│   └── v1-to-v2.json           # Migration metadata
-└── v1-to-v2/
-    ├── migration-guide.md       # Overview
-    ├── steps.md                 # Step-by-step
-    └── gradle-setup.md          # Gradle config
+├── schemas/                    # Migration metadata
+│   └── v1-to-v2.json          # V1 to V2 migration metadata
+│
+└── v1-to-v2/                  # Migration documentation
+    ├── migration-guide.md      # Overview and introduction
+    ├── steps.md                # Step-by-step instructions
+    └── gradle-setup.md         # Gradle configuration reference
 ```
 
-**Status**: ❌ Removed in minimal version (too complex for 2-day hackathon)
+**How it works**:
+1. Read metadata from `schemas/{migration-id}.json`
+2. Read guide docs from `migrations/{migration-id}/`
+3. Extract specific steps from `steps.md` using regex
+4. Return as JSON
 
-**To restore**: Check branch `feature/platform-handler-templates` or git history
+**Example**:
+```bash
+mcp list-migrations
+# Lists all migrations from schemas/*.json
+
+mcp migration-guide v1-to-v2
+# Reads: schemas/v1-to-v2.json + v1-to-v2/*.md
+# Returns: Complete guide with all docs
+
+mcp migration-step v1-to-v2 1
+# Extracts Step 1 from v1-to-v2/steps.md
+```
 
 ---
 
-### Code Scoring System (Removed)
+### ✅ Feature 4: Code Scoring (`score_codebase`, `get_compliance_report`)
 
-**Previously relied on**:
+**What it does**: Analyzes code against best practices and anti-patterns
+
+**Files it relies on**:
+
 ```
 docs/patterns/
-└── vertx/
-    ├── scoring-rules.json       # Scoring rules
-    ├── best-practices.md        # Best practices
-    └── anti-patterns.md         # Anti-patterns
+└── vertx/                      # Vert.x scoring patterns
+    ├── scoring-rules.json      # Rule definitions with patterns
+    ├── best-practices.md       # Best practices guide
+    └── anti-patterns.md        # Anti-patterns guide
 ```
 
-**Status**: ❌ Removed in minimal version (too complex for 2-day hackathon)
+**How it works**:
+1. Read scoring rules from `patterns/{category}/scoring-rules.json`
+2. Scan codebase files (Java, etc.)
+3. Match patterns using regex
+4. Calculate score based on rule weights
+5. Generate compliance report
 
-**To restore**: Check branch `feature/platform-handler-templates` or git history
+**Example**:
+```bash
+mcp list-patterns
+# Lists all patterns from patterns/**/scoring-rules.json
+
+mcp score ./MyVerticle.java --pattern vertx-best-practices
+# Reads: patterns/vertx/scoring-rules.json
+# Scans: MyVerticle.java
+# Returns: Score, violations, recommendations
+
+mcp compliance ./verticles/ --pattern vertx-best-practices
+# Same but returns markdown report
+```
 
 ---
 
@@ -163,26 +200,35 @@ mcp list-docs
 
 ## File Structure Summary
 
-### Minimal Version (Current):
+### Full Version (Current):
 
 ```
 fast-mcp-local/
 ├── src/fast_mcp_local/
-│   ├── server.py              # MCP server (5 tools)
-│   ├── cli.py                 # CLI wrapper (7 commands)
+│   ├── server.py              # MCP server (13 tools)
+│   ├── cli.py                 # CLI wrapper (15 commands)
 │   ├── database.py            # SQLite document storage
 │   ├── loader.py              # Document indexing
 │   ├── template_extractor.py  # Extract code from markdown
-│   └── metadata.py            # Load template metadata
+│   ├── metadata.py            # Load template metadata
+│   ├── migration.py           # Migration guide management
+│   ├── scorer.py              # Code scoring module
+│   └── pattern_matcher.py     # Pattern matching engine
 │
 ├── docs/
 │   ├── vertx/
 │   │   ├── templates/         # 5 verticle templates (.md)
 │   │   └── schemas/           # 5 metadata files (.json)
+│   ├── migrations/            # Migration guides
+│   │   ├── schemas/           # Migration metadata (.json)
+│   │   └── v1-to-v2/          # Migration docs (.md)
+│   ├── patterns/              # Code scoring patterns
+│   │   └── vertx/             # Vert.x patterns
 │   └── company/               # YOUR DOCS GO HERE
 │
 ├── documents.db               # SQLite database (auto-generated)
-└── README_HACKATHON.md        # Start here!
+├── README_HACKATHON.md        # Hackathon guide
+└── DEPENDENCIES.md            # This file
 ```
 
 ### Key Files for Hackathon:
@@ -205,9 +251,14 @@ fast-mcp-local/
 |---------|------------|--------|
 | `generate_verticle` | `docs/vertx/schemas/*.json` + `docs/vertx/templates/*.md` | Add 2 files per template |
 | `search_documents` | All `.md` files in `docs/` | Add `.md` files anywhere in `docs/` |
+| `list_migrations` | `docs/migrations/schemas/*.json` | Add migration metadata JSON |
+| `get_migration_guide` | `docs/migrations/{id}/*.md` | Add migration docs (3 files) |
+| `score_codebase` | `docs/patterns/**/scoring-rules.json` | Add scoring rules JSON |
+| `get_compliance_report` | `docs/patterns/**/scoring-rules.json` + best-practices/anti-patterns `.md` | Add pattern docs |
 | Database indexing | `docs/` folder | Auto-scans on startup |
 
 ---
 
-**Last Updated**: After minimal refactor
+**Last Updated**: After restoring migrations and scoring
 **Branch**: `feature/minimal-hackathon-demo`
+**Status**: Full version with all features

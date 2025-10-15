@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A minimal FastMCP server implementation using Python. This project provides a simple MCP server with basic tools for demonstration and testing purposes.
+A FastMCP server implementation with document management capabilities. The server automatically loads markdown documents from the `docs/` folder, stores them in a SQLite database with token counts (using tiktoken), and provides tools to query and retrieve document information.
 
 ## Requirements
 
@@ -46,17 +46,48 @@ This opens a web interface where you can:
 
 ### Project Structure
 ```
+docs/                       # Markdown documents (recursively scanned on startup)
+  mcp-overview.md
+  fastmcp-guide.md
+  building-tools.md
+  tutorials/                # Nested folders supported
+    getting-started.md
+    best-practices.md
+  api/
+    reference/
+      tools.md
+      resources.md
 src/fast_mcp_local/
   __init__.py          # Package initialization
   server.py            # Main MCP server with tools
+  database.py          # SQLite database operations
+  loader.py            # Document loading and token counting
 tests/
-  test_server.py       # Unit tests for server tools
+  test_server.py       # Server tool tests
+  test_database.py     # Database operation tests
+  test_loader.py       # Document loader tests
+documents.db           # SQLite database (auto-generated, gitignored)
 ```
 
 ### Key Components
 
 - **server.py**: Contains the FastMCP server instance and tool definitions
-- Tools are defined as Python functions decorated with `@mcp.tool()`
+  - Initializes database and loads documents on startup
+  - Provides document query tools and utility tools
+  - Tools are defined as Python functions decorated with `@mcp.tool()`
+
+- **database.py**: SQLite database operations
+  - `DocumentDatabase` class for managing document storage
+  - Methods for inserting, updating, searching, and retrieving documents
+  - Supports context manager pattern for safe connection handling
+
+- **loader.py**: Document loading and token counting
+  - `DocumentLoader` class for recursively scraping markdown files
+  - Uses `glob("**/*.md")` to find files in all subdirectories
+  - Stores documents with relative paths (e.g., "tutorials/guide.md")
+  - Uses tiktoken for accurate token counting (GPT-4 encoding)
+  - Automatically loads documents from `docs/` folder on server startup
+
 - Each tool has type hints and docstrings that define the MCP interface
 
 ### Adding New Tools
@@ -69,6 +100,14 @@ To add a new tool:
 
 ## Dependencies
 
+### Core Dependencies
 - **fastmcp**: The FastMCP framework for building MCP servers
+- **tiktoken**: Token counting library (GPT-4 encoding)
+
+### Development Dependencies
 - **pytest**: Testing framework
-- **pytest-asyncio**: Async support for pytest (for future async tools)
+- **pytest-asyncio**: Async support for pytest
+
+### Built-in Libraries
+- **sqlite3**: Database storage (included with Python)
+- **pathlib**: File path operations (included with Python)

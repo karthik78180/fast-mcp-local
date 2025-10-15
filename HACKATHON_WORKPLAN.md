@@ -1,841 +1,830 @@
-# 2-Day Hackathon Work Plan
+# 2-Day Hackathon Work Plan - PRB SRE Assistant
 
-**Project**: Fast MCP Local - AI-Powered Vert.x Development Assistant
-**Duration**: 2 Days (16 hours)
-**Team Size**: 4-5 members
-
----
-
-## Team Roles & Responsibilities
-
-### Role 1: Backend Developer - Templates & Code Generation
-**Team Member**: [Name]
-**Primary Focus**: Create company-specific verticle templates
-
-**Responsibilities**:
-- Add company-specific verticle templates
-- Plug in actual company code examples
-- Update schemas with company patterns
-- Test code generation functionality
-
-**Skills Required**: Java, Vert.x, Python
+**Project**: PRB SRE Assistant - AI-powered Problem Record management for SRE teams
+**Duration**: 2 Days (16 hours total)
+**Team Size**: 3-5 members
+**Goal**: Customize PRB Assistant for company use and deliver compelling demo
 
 ---
 
-### Role 2: Content Manager - Documentation & Context
-**Team Member**: [Name]
-**Primary Focus**: Add company documentation and context
+## Executive Summary
 
-**Responsibilities**:
-- Collect and index company Vert.x documentation
-- Add company-specific configuration examples
-- Create best practices documents
-- Organize documentation structure
+### What We're Building
 
-**Skills Required**: Technical writing, Markdown, Company domain knowledge
+**PRB SRE Assistant is already implemented** with 10 MCP tools for complete PRB lifecycle management. This hackathon focuses on:
 
----
+1. **Adding company PRB data** (20+ past incidents)
+2. **Customizing templates** for company PRB format
+3. **Testing with real data** from your incident management system
+4. **Integrating with AI tools** (Claude Code, GitHub Copilot)
+5. **Creating winning presentation** (15-20 slides + 5-7 min demo)
 
-### Role 3: QA Engineer - MCP Inspector Testing
-**Team Member**: [Name]
-**Primary Focus**: Test MCP server functionality
+### Success Criteria
 
-**Responsibilities**:
-- Test all MCP tools in Inspector
-- Validate search accuracy
-- Test code generation quality
-- Document bugs and edge cases
-
-**Skills Required**: QA testing, MCP protocol knowledge
+**Day 1 End**: 20+ PRBs indexed, templates customized, demo ready
+**Day 2 End**: Presentation polished, rehearsed 3+ times, ready to win! 🏆
 
 ---
 
-### Role 4: DevEx Engineer - AI Integration & UX
-**Team Member**: [Name]
-**Primary Focus**: GitHub Copilot and Claude Code integration
+## Team Roles
 
-**Responsibilities**:
-- Set up GitHub Copilot Chat integration
-- Test end-user experience with Claude Code
-- Create demo scenarios
-- Record demo video
-
-**Skills Required**: GitHub Copilot, Claude Code, UX design
+| Role | Primary Responsibility | Key Deliverable | Time Investment |
+|------|------------------------|-----------------|-----------------|
+| **SRE/Content Manager** | Add company PRB data | 20+ PRBs indexed and searchable | 40% data, 30% testing, 30% presentation |
+| **Backend Developer** | Customize templates & scoring | Company-specific templates working | 50% customization, 30% testing, 20% presentation |
+| **QA Engineer** | Test all features thoroughly | Comprehensive test report | 60% testing, 20% documentation, 20% presentation |
+| **DevEx Engineer** | AI integration & demo prep | Working demos + backup video | 50% AI integration, 40% demo prep, 10% presentation |
+| **DevOps/Presenter** | Infrastructure & presentation | Polished slides + smooth demo | 60% presentation, 30% demo setup, 10% infrastructure |
 
 ---
 
-### Role 5: DevOps (Optional) - Infrastructure & Demo
-**Team Member**: [Name]
-**Primary Focus**: Deployment and presentation
+## Day 1: Customization & Testing (8 hours)
 
-**Responsibilities**:
-- Set up demo environment
-- Configure CI/CD pipeline
-- Prepare presentation slides
-- Create demo video
+### Morning Session (9:00 AM - 1:00 PM)
 
-**Skills Required**: Docker, Python, CI/CD, Presentation skills
+#### Hour 1: Team Kickoff (9:00 AM - 10:00 AM)
 
----
+**Everyone (30 min)**: Team standup
+- Review project goals and deliverables
+- Assign roles and specific tasks
+- Set up Slack channel: `#hackathon-prb-assistant`
+- Create shared Google Doc for notes/issues
+- Review existing codebase walkthrough
 
-## Day 1: Foundation & Core Features (8 hours)
-
-### Morning Session (Hours 1-4): 9:00 AM - 1:00 PM
-
-#### Hour 1: 9:00 AM - 10:00 AM - Kickoff & Setup
-
-**Everyone (15 min)**: Team standup
-- Review project goals
-- Assign roles
-- Set up communication channel (Slack)
-- Review existing codebase
-
-**Role 1 - Backend Developer**:
-- [ ] Clone repository and set up Python environment
-- [ ] Run existing tests to understand codebase
-- [ ] Review template_extractor.py and metadata.py
-- [ ] Identify where to add company templates
-
-**Role 2 - Content Manager**:
-- [ ] Clone repository
-- [ ] Review docs/vertx/ structure
-- [ ] Gather company Vert.x documentation (Confluence, wikis, Slack)
-- [ ] Create documentation collection plan
-
-**Role 3 - QA Engineer**:
-- [ ] Set up Python environment
-- [ ] Install MCP Inspector: `npm install -g @modelcontextprotocol/inspector`
-- [ ] Test existing MCP server: `python3 -m fast_mcp_local.server`
-- [ ] Familiarize with MCP Inspector UI
-
-**Role 4 - DevEx Engineer**:
-- [ ] Set up Claude Code CLI
-- [ ] Install GitHub Copilot Chat in VS Code
-- [ ] Review .github/copilot-instructions.md
-- [ ] Test existing CLI commands
-
-**Role 5 - DevOps**:
-- [ ] Review CI/CD setup in .github/workflows/
-- [ ] Plan Docker deployment
-- [ ] Create demo environment plan
+**Everyone (30 min)**: Environment verification
+- [ ] Run tests: `pytest` (verify 25 tests pass)
+- [ ] Start MCP server: `python3 -m fast_mcp_local.server`
+- [ ] Test CLI: `prb search "database"`
+- [ ] Test example: `prb analyze docs/prbs/examples/prb-2024-001-database-connection-pool-exhaustion.md`
+- [ ] Report any setup issues immediately
 
 ---
 
-#### Hour 2: 10:00 AM - 11:00 AM - Add Company Templates
+#### Hour 2: Data Collection & Setup (10:00 AM - 11:00 AM)
 
-**Role 1 - Backend Developer**: **Create company verticle template**
-- [ ] Identify 1-2 most common company verticles
-- [ ] Copy actual company verticle code to `docs/vertx/templates/company-[name]-verticle.md`
-- [ ] Follow existing template format:
-  ```markdown
-  # Company [Name] Verticle
+**SRE/Content Manager**:
+- [ ] Access company incident management system (Jira, ServiceNow, Confluence)
+- [ ] Export 5-10 past PRBs to markdown format
+- [ ] Create `docs/prbs/company/` directory
+- [ ] Add first batch of PRBs
+- [ ] Test indexing: restart MCP server and search
 
-  ## Description
-  [What it does]
+**Backend Developer**:
+- [ ] Review company PRB template/format
+- [ ] Identify required vs optional sections for company
+- [ ] Review `src/fast_mcp_local/prb_drafter.py` (templates lines 72-381)
+- [ ] Review `src/fast_mcp_local/prb_analyzer.py` (scoring lines 34-51)
+- [ ] Plan customization approach
 
-  ## Verticle Code
-  ```java
-  [Actual company code]
-  ```
+**QA Engineer**:
+- [ ] Test all 10 CLI commands systematically
+- [ ] Document expected vs actual behavior
+- [ ] Create comprehensive test checklist
+- [ ] Set up test results tracking document
+- [ ] Identify any bugs or issues
 
-  ## Gradle Dependencies
-  ```gradle
-  [Actual dependencies]
-  ```
+**DevEx Engineer**:
+- [ ] Install Claude Code CLI (if using Claude)
+- [ ] Configure GitHub Copilot in VS Code (if using Copilot)
+- [ ] Test MCP server integration with AI tool
+- [ ] Create list of 5-7 demo scenarios
+- [ ] Take baseline screenshots
 
-  ## Configuration
-  ```json
-  [Actual config.json]
-  ```
-  ```
-- [ ] Test template extraction: `pytest tests/test_template_extractor.py -v`
-
-**Role 2 - Content Manager**: **Add company documentation**
-- [ ] Create `docs/company/` directory
-- [ ] Add 5-10 most important company Vert.x docs (Markdown format)
-- [ ] Structure: `docs/company/deployment.md`, `docs/company/best-practices.md`, etc.
-- [ ] Include: platform architecture, configuration guide, troubleshooting
-
-**Role 3 - QA Engineer**: **Test existing features**
-- [ ] Start MCP Inspector: `npx @modelcontextprotocol/inspector python3 -m fast_mcp_local.server`
-- [ ] Test document search: search for "postgres"
-- [ ] Test verticle generation: generate_verticle("platform-async")
-- [ ] Document any issues in Google Doc/Notion
-
-**Role 4 - DevEx Engineer**: **Test CLI**
-- [ ] Test all CLI commands:
-  ```bash
-  mcp search "async handler"
-  mcp list-verticles
-  mcp generate platform-async
-  ```
-- [ ] Document user experience issues
-- [ ] Identify improvements needed
-
-**Role 5 - DevOps**: **Set up Docker**
-- [ ] Create Dockerfile if doesn't exist
-- [ ] Build Docker image: `docker build -t fast-mcp-local .`
-- [ ] Test running server in container
+**DevOps/Presenter**:
+- [ ] Create presentation outline (15-20 slides structure)
+- [ ] Plan demo flow (5-7 minutes total)
+- [ ] Set up demo laptop and test
+- [ ] Test projector connection and A/V
+- [ ] Create backup plan document
 
 ---
 
-#### Hour 3: 11:00 AM - 12:00 PM - Add More Templates & Docs
+#### Hour 3: Implementation Begins (11:00 AM - 12:00 PM)
 
-**Role 1 - Backend Developer**: **Create JSON schema**
-- [ ] Create `docs/vertx/schemas/company-[name].json`:
-  ```json
-  {
-    "type": "company-[name]",
-    "name": "Company [Name] Verticle",
-    "description": "[Description]",
-    "template_file": "templates/company-[name]-verticle.md",
-    "gradle_dependencies": ["..."],
-    "config_keys": ["..."],
-    "use_cases": ["..."]
-  }
-  ```
-- [ ] Test generation: `python3 -m fast_mcp_local.server` and call generate_verticle
-- [ ] Add 2nd company template if time permits
+**SRE/Content Manager**:
+- [ ] Add 10+ more company PRBs (total 15+ so far)
+- [ ] Test search with company-specific terminology
+- [ ] Note any formatting inconsistencies in exported PRBs
+- [ ] Document data quality issues to address
 
-**Role 2 - Content Manager**: **Index documentation**
-- [ ] Run document loader to index company docs:
-  ```python
-  from fast_mcp_local.loader import load_documents
-  from fast_mcp_local.database import init_db
+**Backend Developer**:
+- [ ] Start customizing PRB templates in `prb_drafter.py`
+- [ ] Add company-specific sections (e.g., "Customer Impact", "SLA Status")
+- [ ] Test draft generation: `prb draft "Test incident" --severity High`
+- [ ] Verify auto-populated metadata matches company needs
 
-  init_db()
-  load_documents("docs/company")
-  ```
-- [ ] Verify docs are searchable in database
-- [ ] Add metadata (titles, descriptions) to docs
+**QA Engineer**:
+- [ ] Test with first batch of company PRBs
+- [ ] Verify search returns relevant results for company data
+- [ ] Test draft generation with real incident descriptions from company
+- [ ] Log all issues in shared Google Doc with severity
 
-**Role 3 - QA Engineer**: **Test new templates**
-- [ ] Refresh MCP Inspector (restart server)
-- [ ] Test list_verticle_types - verify new templates appear
-- [ ] Test generate_verticle with company template
-- [ ] Validate generated code quality
+**DevEx Engineer**:
+- [ ] Create 3-5 specific demo prompts for AI
+- [ ] Test Claude Code: `claude code "Search for database incidents in our PRBs"`
+- [ ] Test GitHub Copilot Chat with MCP integration
+- [ ] Document what works well vs what doesn't
+- [ ] Start planning demo script
 
-**Role 4 - DevEx Engineer**: **Test Copilot integration**
-- [ ] Update `.github/copilot-instructions.md` with company context:
-  ```markdown
-  # GitHub Copilot Instructions
-
-  This is [Company Name]'s Vert.x platform repository.
-
-  Platform uses custom handlers:
-  - AsyncHandler for non-blocking operations
-  - SyncHandler for blocking operations (SOAP, JDBC)
-  - MultipartHandler for file uploads
-
-  To generate code, use:
-  `mcp generate company-[name]`
-  ```
-- [ ] Test asking Copilot: "Generate a company AsyncHandler for user CRUD"
-
-**Role 5 - DevOps**: **Prepare demo environment**
-- [ ] Deploy to local K8s (minikube) or Docker Compose
-- [ ] Create `docker-compose.yml` for easy deployment
-- [ ] Test accessibility from other team members
+**DevOps/Presenter**:
+- [ ] Start creating presentation slides
+- [ ] Problem statement slides (2 slides: current pain points)
+- [ ] Solution overview slides (2 slides: PRB Assistant capabilities)
+- [ ] Begin planning demo flow with timing
 
 ---
 
-#### Hour 4: 12:00 PM - 1:00 PM - Integration Testing
+#### Hour 4: Deep Work (12:00 PM - 1:00 PM)
 
-**Role 1 - Backend Developer**: **Add company-specific patterns**
-- [ ] Create `docs/patterns/company-best-practices/scoring-rules.json`:
-  ```json
-  {
-    "pattern_id": "company-best-practices",
-    "name": "Company Vert.x Best Practices",
-    "categories": {
-      "configuration": {
-        "weight": 20,
-        "rules": [
-          {
-            "id": "config-access",
-            "pattern": "config\\(\\)\\.getData\\(\\)",
-            "score": 10,
-            "suggestion": "Use config().getData() for configuration"
-          }
-        ]
-      }
-    }
-  }
-  ```
-- [ ] Test scoring: `mcp score ./path/to/company/verticle.java --pattern company-best-practices`
+**SRE/Content Manager**:
+- [ ] Reach target: 20+ company PRBs indexed
+- [ ] Test search with various keywords and phrases
+- [ ] Verify all PRBs are discoverable
+- [ ] Create list of sample search queries for demo
 
-**Role 2 - Content Manager**: **Add examples and FAQs**
-- [ ] Create `docs/company/examples/` directory
-- [ ] Add 3-5 real company code examples
-- [ ] Create `docs/company/faq.md` with common questions
-- [ ] Index new docs
+**Backend Developer**:
+- [ ] Complete template customization for all 3 templates
+- [ ] Test standard, critical, and postmortem templates
+- [ ] Customize scoring rules if needed (`prb_analyzer.py`)
+- [ ] Test analysis: `prb analyze company-prb.md`
 
-**Role 3 - QA Engineer**: **End-to-end testing**
-- [ ] Test complete workflow:
-  1. Search for company docs
-  2. Generate company template
-  3. Score generated code
-  4. Verify compliance
-- [ ] Create test report with pass/fail for all features
-- [ ] Log any bugs in issue tracker
+**QA Engineer**:
+- [ ] Complete initial feature testing checklist
+- [ ] Test edge cases (empty PRBs, malformed markdown)
+- [ ] Verify action item extraction with company format
+- [ ] Test with 5+ diverse company PRBs
 
-**Role 4 - DevEx Engineer**: **Create demo scenarios**
-- [ ] Write 3-5 demo prompts for Copilot:
-  - "How do I configure the company platform?"
-  - "Generate an AsyncHandler for PostgreSQL user queries"
-  - "What are the best practices for SyncHandler?"
-- [ ] Test each scenario and document results
-- [ ] Record screenshots/GIFs
+**DevEx Engineer**:
+- [ ] Refine AI demo scenarios based on testing
+- [ ] Record successful interactions (screenshots/screen recording)
+- [ ] Test all 3 main demos (search, draft, analyze)
+- [ ] Create backup plan if live AI demo fails
 
-**Role 5 - DevOps**: **Set up monitoring**
-- [ ] Add basic health check endpoint (if not exists)
-- [ ] Set up simple monitoring (logs, metrics)
-- [ ] Test server performance under load
-
-**Everyone (30 min)**: **Lunch Break** 🍕
+**DevOps/Presenter**:
+- [ ] Complete presentation structure (all slide titles)
+- [ ] Add demo slides (3-4 slides with placeholders)
+- [ ] Add business value slides (ROI, time savings metrics)
+- [ ] Add production roadmap slide (8-week plan)
 
 ---
 
-### Afternoon Session (Hours 5-8): 2:00 PM - 6:00 PM
+**LUNCH BREAK (1:00 PM - 2:00 PM)** 🍕
 
-#### Hour 5: 2:00 PM - 3:00 PM - Customization & Polish
+---
 
-**Role 1 - Backend Developer**: **Add migration guide**
-- [ ] Create `docs/migrations/company-v1-to-v2/` directory
-- [ ] Add `migration-guide.md` with company-specific migration steps
-- [ ] Add `steps.md` with detailed OpenRewrite recipe steps
-- [ ] Create `docs/migrations/schemas/company-v1-to-v2.json`
-- [ ] Test: `mcp migration-guide company-v1-to-v2`
+### Afternoon Session (2:00 PM - 6:00 PM)
 
-**Role 2 - Content Manager**: **Create best practices guide**
-- [ ] Write comprehensive `docs/company/best-practices.md`:
-  - When to use AsyncHandler vs SyncHandler
-  - Configuration patterns
-  - Common anti-patterns
-  - Resource cleanup patterns
-- [ ] Add code examples from company codebase
-- [ ] Index document
+#### Hour 5: Polish & Integration (2:00 PM - 3:00 PM)
 
-**Role 3 - QA Engineer**: **Regression testing**
+**SRE/Content Manager**:
+- [ ] Improve PRB data quality (fix any formatting issues)
+- [ ] Add missing metadata to PRBs if needed
+- [ ] Create 2-3 "golden" PRB examples for demo
+- [ ] Test and document search relevance quality
+
+**Backend Developer**:
+- [ ] Fine-tune template output based on testing
+- [ ] Test with 10+ different real incident descriptions
+- [ ] Verify scoring is reasonable for company PRBs
+- [ ] Document any remaining customization needs
+
+**QA Engineer**:
 - [ ] Run full test suite: `pytest -v`
-- [ ] Fix any broken tests
-- [ ] Add new tests for company templates
-- [ ] Verify all MCP tools work with company context
+- [ ] Fix any broken tests if found
+- [ ] Create comprehensive test report document
+- [ ] Sign off on quality if all tests pass
 
-**Role 4 - DevEx Engineer**: **Refine UX**
-- [ ] Test Claude Code integration:
-  ```bash
-  # Start server in background
-  python3 -m fast_mcp_local.server &
+**DevEx Engineer**:
+- [ ] Start recording demo video (backup plan)
+- [ ] Record search demo (1-2 min)
+- [ ] Record draft PRB demo (2-3 min)
+- [ ] Record analyze PRB demo (1-2 min)
 
-  # Test with Claude Code
-  claude code "Generate a company AsyncHandler for user CRUD operations"
-  ```
-- [ ] Identify UX improvements
-- [ ] Update CLI help text with company examples
-
-**Role 5 - DevOps**: **CI/CD pipeline**
-- [ ] Set up GitHub Actions for auto-deployment
-- [ ] Create staging environment
-- [ ] Test automated builds
+**DevOps/Presenter**:
+- [ ] Finalize all presentation slides
+- [ ] Add screenshots and visuals to slides
+- [ ] Create Q&A preparation document
+- [ ] Test presentation flow and timing
 
 ---
 
-#### Hour 6: 3:00 PM - 4:00 PM - Demo Preparation
+#### Hour 6: First Demo Rehearsal (3:00 PM - 4:00 PM)
 
-**Role 1 - Backend Developer**: **Code cleanup**
-- [ ] Review and clean up code
-- [ ] Add inline comments for company-specific logic
-- [ ] Update README with company-specific instructions
-- [ ] Commit all changes
+**Everyone**: Demo rehearsal #1
 
-**Role 2 - Content Manager**: **Documentation review**
-- [ ] Review all company docs for accuracy
-- [ ] Fix any formatting issues
-- [ ] Add table of contents to long docs
-- [ ] Create quick-start guide for company developers
+**DevEx Engineer (lead)**:
+- Present demo flow (aim for 5-7 minutes)
+- Demo 1: Search past PRBs (1-2 min)
+- Demo 2: Draft new PRB (2-3 min)
+- Demo 3: Analyze PRB quality (2 min)
+- Demo 4 (optional): AI integration (1 min)
 
-**Role 3 - QA Engineer**: **Create test plan document**
-- [ ] Document all test scenarios
-- [ ] Create test results report
-- [ ] List known issues and workarounds
-- [ ] Create user acceptance testing checklist
+**Team Feedback Session**:
+- What worked well?
+- What needs improvement?
+- Timing adjustments needed?
+- Identify potential failure points
+- Discuss backup plans
 
-**Role 4 - DevEx Engineer**: **Record demo video**
-- [ ] Script demo scenarios (3-5 minutes)
-- [ ] Record screen capture showing:
-  1. Searching company docs with Copilot
-  2. Generating company verticle
-  3. Scoring code against company best practices
-  4. Complete workflow (search → generate → test)
-- [ ] Add voiceover or captions
-
-**Role 5 - DevOps**: **Prepare live demo**
-- [ ] Set up demo environment (laptop + projector)
-- [ ] Test connectivity and performance
-- [ ] Prepare backup demo (video) in case of issues
-- [ ] Create demo script
+**Action Items from Feedback**:
+- [ ] Polish demo scripts
+- [ ] Fix identified issues
+- [ ] Adjust timing
+- [ ] Prepare backup materials
 
 ---
 
-#### Hour 7: 4:00 PM - 5:00 PM - Presentation Creation
+#### Hour 7: Documentation & Testing (4:00 PM - 5:00 PM)
 
-**Everyone (Collaborative)**:
-- [ ] Create presentation slides (15-20 slides):
-  1. Title slide
-  2. Problem statement (developer pain points)
-  3. Our solution (Fast MCP Local)
-  4. Architecture diagram
-  5. Demo scenario 1: New developer onboarding
-  6. Demo scenario 2: Code generation
-  7. Demo scenario 3: Code quality scoring
-  8. Company-specific customization
-  9. ROI analysis
-  10. Production roadmap
-  11. Success metrics
-  12. Live demo
-  13. Q&A
+**SRE/Content Manager**:
+- [ ] Document PRB data collection process for company
+- [ ] Create guide for adding more PRBs in future
+- [ ] Note data quality requirements and best practices
+- [ ] Prepare answers for data-related questions
 
-**Role 1 + Role 2**: Work on technical slides (architecture, features)
-**Role 3 + Role 4**: Work on demo slides and user stories
-**Role 5**: Work on ROI, metrics, and roadmap slides
+**Backend Developer**:
+- [ ] Document all customizations made (with line numbers)
+- [ ] Create "how to customize for your company" guide
+- [ ] Prepare technical architecture explanation
+- [ ] Prepare for technical Q&A
 
----
+**QA Engineer**:
+- [ ] Finalize comprehensive test report
+- [ ] Document all features tested with results
+- [ ] List any known issues and workarounds
+- [ ] Create Day 2 smoke test checklist
 
-#### Hour 8: 5:00 PM - 6:00 PM - Final Testing & Rehearsal
+**DevEx Engineer**:
+- [ ] Finish recording and editing demo video
+- [ ] Add voiceover or captions if helpful
+- [ ] Export to multiple formats for backup
+- [ ] Upload to cloud (Google Drive/Dropbox) + USB drive
 
-**Everyone**:
-- [ ] Full presentation rehearsal (2x)
-- [ ] Practice demo transitions
-- [ ] Prepare for Q&A (anticipate questions)
-- [ ] Test all demo scenarios
-- [ ] Backup slides to cloud
-- [ ] Export demo video to USB drive
-
-**Final Checklist**:
-- [ ] Code committed and pushed to GitHub
-- [ ] All tests passing
-- [ ] Demo environment running
-- [ ] Presentation slides ready
-- [ ] Demo video ready
-- [ ] Team members know their parts
+**DevOps/Presenter**:
+- [ ] Complete all presentation slides (100%)
+- [ ] Add team member photos/names to intro slide
+- [ ] Create backup slides (text-only in case demo fails)
+- [ ] Print speaker notes or handouts if needed
 
 ---
 
-## Day 2: Polish, Testing & Presentation (8 hours)
+#### Hour 8: Day 1 Wrap-up (5:00 PM - 6:00 PM)
 
-### Morning Session (Hours 9-12): 9:00 AM - 1:00 PM
+**Everyone (30 min)**: Full presentation rehearsal #2
+- Complete presentation flow (10-15 min total)
+- Live demo with timer (5-7 min)
+- Practice transitions between speakers
+- Q&A practice with common questions
 
-#### Hour 9: 9:00 AM - 10:00 AM - Final Polish
+**Everyone (15 min)**: Feedback and improvements
+- What worked well in rehearsal?
+- What still needs fixing?
+- Timing issues identified?
+- Role clarity and handoffs
+- Demo execution quality
 
-**Everyone (15 min)**: Team standup
+**Everyone (15 min)**: Day 2 planning
+- Review remaining tasks for morning
+- Confirm morning priorities and schedule
+- Set final rehearsal times
+- Confirm emergency contacts
+- Assign morning tasks
+
+**End of Day 1 Checklist**:
+- [ ] 20+ company PRBs indexed and searchable
+- [ ] Templates customized for company format
+- [ ] All 10 MCP tools tested and working
+- [ ] AI integration tested
+- [ ] Demo scenarios prepared and rehearsed
+- [ ] Presentation slides 100% complete
+- [ ] Demo video recorded (backup)
+- [ ] All tests passing (25 tests)
+- [ ] Team confident about tomorrow
+
+---
+
+## Day 2: Polish & Presentation (8 hours)
+
+### Morning Session (9:00 AM - 1:00 PM)
+
+#### Hour 9: Final Testing (9:00 AM - 10:00 AM)
+
+**Everyone (15 min)**: Morning standup
 - Review Day 1 accomplishments
-- Identify remaining work
-- Assign final tasks
+- Confirm Day 2 priorities
+- Address any overnight concerns
+- Final role assignments
 
-**Role 1 - Backend Developer**: **Performance optimization**
-- [ ] Add caching for frequently accessed templates
-- [ ] Optimize database queries
-- [ ] Add request timing metrics
-- [ ] Test with larger document corpus
+**SRE/Content Manager (45 min)**:
+- [ ] Final PRB data verification (all indexed correctly)
+- [ ] Test search with exact demo keywords
+- [ ] Prepare PRB statistics (count, topics, time periods)
+- [ ] Prepare for data-related questions from judges
 
-**Role 2 - Content Manager**: **Add more examples**
-- [ ] Add 5-10 more company code examples
-- [ ] Create "Common Patterns" cheat sheet
-- [ ] Add troubleshooting guide
-- [ ] Create glossary of company terms
+**Backend Developer (45 min)**:
+- [ ] Final template testing with edge cases
+- [ ] Run full test suite one more time: `pytest -v`
+- [ ] Review technical architecture for Q&A
+- [ ] Document any last-minute adjustments made
 
-**Role 3 - QA Engineer**: **Edge case testing**
-- [ ] Test with invalid inputs
-- [ ] Test with missing documentation
-- [ ] Test with malformed templates
-- [ ] Document error handling
+**QA Engineer (45 min)**:
+- [ ] Run smoke tests on demo laptop
+- [ ] Verify all CLI commands work perfectly
+- [ ] Test MCP server startup (timing and output)
+- [ ] Confirm database is fully indexed
+- [ ] Verify backup laptop is ready
 
-**Role 4 - DevEx Engineer**: **UX improvements**
-- [ ] Add better error messages
-- [ ] Improve CLI output formatting
-- [ ] Add progress indicators
-- [ ] Test with real company developers (if possible)
+**DevEx Engineer (45 min)**:
+- [ ] Test AI integration one final time
+- [ ] Verify demo video plays correctly (test multiple players)
+- [ ] Organize backup demo materials (screenshots, scripts)
+- [ ] Check all demo screenshots are clear and labeled
 
-**Role 5 - DevOps**: **Documentation**
-- [ ] Write deployment guide
-- [ ] Create runbook for common issues
-- [ ] Document infrastructure requirements
-- [ ] Create monitoring dashboard
-
----
-
-#### Hour 10: 10:00 AM - 11:00 AM - User Testing
-
-**Everyone**: **Internal user testing session**
-- [ ] Invite 2-3 company developers (not on team)
-- [ ] Have them try common workflows:
-  1. Search for documentation
-  2. Generate a verticle they need
-  3. Score existing code
-- [ ] Collect feedback
-- [ ] Identify usability issues
-- [ ] Make quick fixes based on feedback
+**DevOps/Presenter (45 min)**:
+- [ ] Test presentation laptop + projector connection
+- [ ] Verify slides display correctly on projector
+- [ ] Test presentation clicker/remote
+- [ ] Confirm backup laptop is configured identically
+- [ ] Test screen sharing if presenting remotely
 
 ---
 
-#### Hour 11: 11:00 AM - 12:00 PM - Final Features
+#### Hour 10: Presentation Polish (10:00 AM - 11:00 AM)
 
-**Role 1 - Backend Developer**: **Add missing templates**
-- [ ] Add any critical company templates identified in user testing
-- [ ] Update schemas
-- [ ] Test generation
+**Everyone**: Final presentation refinement
 
-**Role 2 - Content Manager**: **Address feedback**
-- [ ] Fix documentation issues found in user testing
-- [ ] Add missing examples
-- [ ] Improve search keywords
+**DevOps/Presenter (lead)**:
+- [ ] Review each slide for clarity and consistency
+- [ ] Ensure consistent formatting across all slides
+- [ ] Add detailed speaker notes to each slide
+- [ ] Time each section with stopwatch
 
-**Role 3 - QA Engineer**: **Final test pass**
-- [ ] Run all tests
-- [ ] Test all demo scenarios one more time
-- [ ] Create final test report
-- [ ] Sign off on quality
+**Content Improvements**:
+- [ ] Add transitions between major sections
+- [ ] Highlight key metrics (87% faster, $4.2M savings, 1,300% ROI)
+- [ ] Add compelling visuals where appropriate
+- [ ] Ensure fonts are readable from back of room (48pt+ for body text)
+- [ ] Check color contrast for visibility
 
-**Role 4 - DevEx Engineer**: **Polish demo**
-- [ ] Refine demo script based on user feedback
-- [ ] Update demo video if needed
-- [ ] Prepare backup demos
-- [ ] Test on presentation laptop
-
-**Role 5 - DevOps**: **Production readiness**
-- [ ] Create production deployment plan
-- [ ] Estimate infrastructure costs
-- [ ] Document security considerations
-- [ ] Create rollout plan
+**Team Review Questions**:
+- Does each slide support our story effectively?
+- Are metrics easy to understand at a glance?
+- Is demo flow clearly explained?
+- Are we within time limit?
+- Is the "ask" clear at the end?
 
 ---
 
-#### Hour 12: 12:00 PM - 1:00 PM - Presentation Final Prep
+#### Hour 11: Rehearsal #3 (11:00 AM - 12:00 PM)
+
+**Everyone**: Full presentation rehearsal with strict timer
+
+**Presentation Flow** (10-15 min total):
+
+1. **Introduction** (1 min) - DevOps/Presenter
+   - Team introduction with names and roles
+   - Hook: "SREs spend 2-4 hours on each PRB"
+   - Our solution in one sentence
+
+2. **Problem Statement** (1-2 min) - SRE/Content Manager
+   - Current SRE pain points (time, quality, learning)
+   - Show real impact: 60-70% incomplete PRBs
+   - Cost: $50K-$100K annually per team wasted
+
+3. **Technical Solution** (2 min) - Backend Developer
+   - Architecture overview (PRB Analyzer + Drafter + Search)
+   - 10 MCP tools across 4 capabilities
+   - Technology stack (FastMCP, SQLite FTS5, Python)
+   - Emphasize: Already implemented, production-ready
+
+4. **Live Demo** (5-7 min) - DevEx Engineer
+   - **Demo 1**: Search past PRBs (1-2 min)
+     - Show search for "database timeout"
+     - Highlight: 97% faster (15-20 min → 30 sec)
+   - **Demo 2**: Draft new PRB (2-3 min)
+     - Draft from incident description
+     - Show auto-populated structure
+     - Highlight: 87% faster (2-4 hours → 15-30 min)
+   - **Demo 3**: Analyze PRB quality (2 min)
+     - Show scoring (85.5%, Grade B)
+     - Show weaknesses and suggestions
+     - Highlight: Objective quality metrics
+   - **Demo 4** (optional): AI integration (1 min)
+     - Quick Claude Code or Copilot demo
+
+5. **Business Value** (2 min) - SRE/Content Manager
+   - Productivity gains table (87% faster, 35% better quality)
+   - Cost savings: $847.5K per team annually
+   - ROI: 1,300% first year, payback < 2 months
+   - For 5 teams: $4.2M annually
+
+6. **Production Roadmap** (1 min) - DevOps/Presenter
+   - 8-week implementation plan
+   - 4 phases: deployment → integration → features → hardening
+   - Next steps: Pilot with 1 team, expand to 5 teams
+
+7. **Q&A** (3-5 min) - Everyone
+   - Prepared answers for common questions
+   - Each person covers their domain expertise
+
+**Post-Rehearsal Feedback**:
+- Timing acceptable? (adjust if needed)
+- Transitions smooth between speakers?
+- Demos work flawlessly?
+- Message clear and compelling?
+- Ready for Q&A?
+
+---
+
+**LUNCH BREAK (12:00 PM - 1:00 PM)** 🍕
+
+**Use lunch to**:
+- Relax and destress
+- Stay hydrated
+- Light meal (don't overeat before presenting)
+- Mental preparation
+- Review speaker notes if helpful
+
+---
+
+### Afternoon Session (1:00 PM - 6:00 PM)
+
+#### Hour 12: Final Rehearsal & Q&A Prep (1:00 PM - 2:00 PM)
+
+**Everyone (30 min)**: Final full rehearsal #4
+
+**Focus on**:
+- [ ] Polishing any remaining rough spots
+- [ ] Perfecting demo execution
+- [ ] Smooth transitions and handoffs
+- [ ] Confident delivery and energy
+- [ ] Backup plan readiness
+
+**Everyone (30 min)**: Q&A preparation session
+
+**Common Questions to Prepare**:
+
+1. **"How does this scale to 100+ SRE teams?"**
+   - Answer (DevOps): SQLite handles 1000+ PRBs easily, can migrate to PostgreSQL for enterprise scale, horizontal scaling with load balancer
+
+2. **"What about security and data privacy?"**
+   - Answer (Backend Dev): On-premise deployment, data never leaves company network, authentication/authorization in Phase 1, audit logging available
+
+3. **"How do we keep PRB templates updated?"**
+   - Answer (Backend Dev): Templates are code (Python), version controlled, easy to update, can have multiple template versions
+
+4. **"Can this integrate with our incident management system?"**
+   - Answer (DevEx): Yes, Phase 2 includes PagerDuty, ServiceNow, Jira integration, MCP protocol makes integration straightforward
+
+5. **"What's the actual production deployment timeline?"**
+   - Answer (DevOps): 8 weeks with 2-3 developers, Phase 1 (2 weeks) gets basic functionality live, iterative rollout after that
+
+6. **"How much does this cost to run in production?"**
+   - Answer (DevOps): Minimal - Python app, SQLite database, ~$1K/year infrastructure for 100 users, primary cost is developer time
+
+7. **"What if our PRB format is different?"**
+   - Answer (Backend Dev): Templates are fully customizable (we can show code), takes 1-2 hours to adapt to new format
+
+8. **"How do you handle PRB data quality issues?"**
+   - Answer (SRE/Content): Search works even with inconsistent data, scoring system identifies incomplete PRBs, guide teams to improve quality
+
+**Assign Question Owners**:
+- Backend Developer: Technical/architecture/customization
+- SRE/Content Manager: Data quality/PRB format/business process
+- DevEx Engineer: AI integration/MCP protocol/tooling
+- DevOps/Presenter: Deployment/scaling/infrastructure/cost
+- QA Engineer: Testing/quality/reliability/performance
+
+---
+
+#### Hour 13-14: Buffer Time & Final Prep (2:00 PM - 4:00 PM)
+
+**Use this buffer time for**:
+- [ ] Addressing any last-minute issues
+- [ ] Additional rehearsals if team requests
+- [ ] Creating any missing backup materials
+- [ ] Mental preparation and rest
+- [ ] Reviewing notes
+- [ ] Staying energized and positive
+
+**Specific Final Tasks**:
+
+**SRE/Content Manager**:
+- [ ] Review PRB statistics one more time
+- [ ] Prepare specific data quality examples to show
+- [ ] Practice business value talking points
+- [ ] Relax and stay confident
+
+**Backend Developer**:
+- [ ] Review codebase structure for demo
+- [ ] Practice explaining architecture clearly
+- [ ] Have technical answers rehearsed
+- [ ] Double-check templates work
+
+**QA Engineer**:
+- [ ] Final smoke test 30 minutes before presentation
+- [ ] Verify backup laptop configured correctly
+- [ ] Have test report easily accessible
+- [ ] Be ready to answer quality/testing questions
+
+**DevEx Engineer**:
+- [ ] Practice demo one more time on demo laptop
+- [ ] Verify demo video is on multiple devices
+- [ ] Prepare backup demo materials (screenshots)
+- [ ] Mental preparation for live demo
+
+**DevOps/Presenter**:
+- [ ] Load presentation on USB drive (backup)
+- [ ] Upload to cloud (Google Drive, Dropbox)
+- [ ] Print speaker notes if helpful
+- [ ] Review opening and closing remarks
+- [ ] Stay calm, confident, energized
 
 **Everyone**:
-- [ ] Final presentation rehearsal
-- [ ] Time each section (stay under time limit)
-- [ ] Polish slides based on rehearsal
-- [ ] Prepare answers to likely questions:
-  - How does this scale?
-  - What about security?
-  - How do we keep templates updated?
-  - What's the production roadmap?
-- [ ] Assign speaking roles
-- [ ] Test A/V equipment
-
-**Lunch Break** 🍕
+- [ ] Dress appropriately (business casual or as appropriate)
+- [ ] Check appearance (camera-ready if recorded)
+- [ ] Bring water bottle
+- [ ] Have backup materials organized
 
 ---
 
-### Afternoon Session (Hours 13-16): 2:00 PM - 6:00 PM
+#### Hour 15: Pre-Presentation Setup (4:00 PM - 5:00 PM)
 
-#### Hour 13-14: 2:00 PM - 4:00 PM - Buffer Time
+**Everyone (30 min)**: Venue setup and equipment testing
 
-**Use this time for**:
-- [ ] Fixing any critical bugs
-- [ ] Adding polish based on feedback
-- [ ] Improving presentation
-- [ ] Creating marketing materials (posters, handouts)
-- [ ] Recording better demo video
-- [ ] Writing blog post about the project
-- [ ] Preparing for unexpected issues
+**Venue Setup Checklist**:
+- [ ] Test projector connection thoroughly
+- [ ] Test presentation laptop (load slides, navigate through)
+- [ ] Test internet connection if needed for demo
+- [ ] Test audio if using video with sound
+- [ ] Test demo laptop and environment
+- [ ] Have backup laptop connected and ready
+- [ ] Have demo video accessible on multiple devices
+- [ ] Have USB drives with all materials ready
+- [ ] Test screen sharing if remote presentation
+- [ ] Verify clicker/remote works from back of room
 
-**Role 1 - Backend Developer**: Code review and cleanup
-**Role 2 - Content Manager**: Final documentation pass
-**Role 3 - QA Engineer**: Stress testing
-**Role 4 - DevEx Engineer**: Demo rehearsal
-**Role 5 - DevOps**: Deployment testing
+**Final Slide Check**:
+- [ ] Slides display correctly on projector
+- [ ] Fonts are readable from back of room
+- [ ] Colors look good (not washed out)
+- [ ] Animations work if any
+- [ ] Transitions are smooth
 
----
+**Demo Environment Check**:
+- [ ] MCP server starts correctly
+- [ ] All CLI commands work
+- [ ] Database is indexed with company PRBs
+- [ ] Search returns expected results
+- [ ] Draft generation works
+- [ ] Analysis returns good scores
+- [ ] Network is stable (if needed)
 
-#### Hour 15: 4:00 PM - 5:00 PM - Pre-Presentation Checks
+**Everyone (15 min)**: Team mental preparation
+- Deep breaths and relaxation
+- Positive visualization
+- Remember: "We've built something amazing"
+- Trust the preparation and rehearsals
+- Support each other
 
-**Everyone**:
-- [ ] Final final rehearsal (full run-through)
-- [ ] Test all equipment
-- [ ] Load presentation on presentation laptop
-- [ ] Test internet connection
-- [ ] Backup everything to cloud + USB
-- [ ] Print handouts (if any)
-- [ ] Set up booth/demo area
-- [ ] Relax and hydrate 💧
-
----
-
-#### Hour 16: 5:00 PM - 6:00 PM - Presentation & Demo
-
-**Presentation Flow** (10-15 minutes):
-
-1. **Introduction** (2 min) - Role 5
-   - Team introduction
-   - Problem statement
-   - Quick overview
-
-2. **Solution & Architecture** (3 min) - Role 1
-   - What is Fast MCP Local
-   - How it works (architecture)
-   - Company-specific customization
-
-3. **Live Demo** (5-7 min) - Role 4
-   - Demo 1: Search company docs with Copilot
-   - Demo 2: Generate company verticle
-   - Demo 3: Score code against company standards
-   - Show MCP Inspector
-
-4. **Impact & Value** (2 min) - Role 2
-   - Developer productivity gains
-   - Code quality improvements
-   - ROI analysis
-
-5. **Production Roadmap** (1 min) - Role 5
-   - What it takes to go to production
-   - Timeline and effort
-   - Next steps
-
-6. **Q&A** (5 min) - Everyone
-
-**Demo Backup Plan**:
-- If live demo fails → play video
-- If video fails → show screenshots
-- If all fails → describe workflows verbally
+**Everyone (15 min)**: Final team huddle
+- Confirm speaker order and roles
+- Check equipment one last time
+- Address any last-minute concerns
+- Team motivational moment
+- Group fist bump or team cheer
+- "Let's win this!" 🏆
 
 ---
 
-## Daily Standups
+#### Hour 16: PRESENTATION TIME! (5:00 PM - 6:00 PM)
 
-### Day 1 Morning Standup (9:00 AM)
-Each person shares:
-- What I'm working on today
-- What I need from others
-- Any blockers
+**Showtime!** (10-15 min presentation + Q&A)
 
-### Day 1 End-of-Day Sync (5:30 PM)
-Each person shares:
-- What I completed
-- What's left for Day 2
-- Any issues
+**Presentation Flow**:
+1. Introduction (1 min)
+2. Problem Statement (1-2 min)
+3. Technical Solution (2 min)
+4. **Live Demo** (5-7 min) - The star of the show!
+5. Business Value (2 min)
+6. Production Roadmap (1 min)
+7. Q&A (3-5 min)
 
-### Day 2 Morning Standup (9:00 AM)
-Each person shares:
-- Day 1 recap
-- Day 2 priorities
-- Final demo readiness
+**Demo Backup Plan** (if something goes wrong):
+- **Plan A**: Live demo (preferred)
+- **Plan B**: Pre-recorded demo video
+- **Plan C**: Screenshots with narration
+- **Plan D**: Verbal walkthrough with architecture diagram
 
----
+**During Presentation**:
+- Speak clearly and project voice
+- Make eye contact with audience/judges
+- Show energy and enthusiasm
+- Handle technical issues gracefully
+- Support teammates during their sections
+- Smile and enjoy the moment!
 
-## Communication Plan
+**During Q&A**:
+- Listen carefully to each question
+- Clarify if question is unclear
+- Defer to appropriate team member
+- Be honest if you don't know something
+- Keep answers concise (1-2 minutes max)
+- Thank judges for questions
 
-### Slack Channel
-Create `#hackathon-fast-mcp` channel for:
-- Quick questions
-- Status updates
-- Sharing screenshots
-- Coordinating breaks
-
-### Shared Documents
-- **Google Doc**: Real-time notes, issues, decisions
-- **Figma/Miro**: Collaborative presentation design
-- **GitHub Project Board**: Track tasks and bugs
-
-### Check-ins
-- Morning standup: 15 minutes
-- Mid-day sync: 10 minutes
-- End-of-day sync: 15 minutes
-
----
-
-## Success Criteria
-
-By end of Day 2, we should have:
-
-- [ ] **Working MCP Server** with company-specific context
-- [ ] **3-5 Company Templates** indexed and working
-- [ ] **Company Documentation** searchable (20+ docs)
-- [ ] **Code Scoring** for company best practices
-- [ ] **Migration Guide** for company platform version
-- [ ] **GitHub Copilot Integration** tested and working
-- [ ] **Claude Code Integration** tested and working
-- [ ] **MCP Inspector Demo** ready
-- [ ] **Demo Video** recorded (3-5 minutes)
-- [ ] **Presentation Slides** (15-20 slides)
-- [ ] **Live Demo** rehearsed 3+ times
-- [ ] **Test Report** with all features validated
+**After Presentation**:
+- [ ] Thank the audience and judges
+- [ ] Answer any follow-up questions
+- [ ] Network with judges and attendees
+- [ ] Collect business cards if appropriate
+- [ ] Gather feedback informally
+- [ ] Take photos with team
+- [ ] CELEBRATE THE ACCOMPLISHMENT! 🎉🏆
 
 ---
 
-## Risk Mitigation
+## Success Metrics & Evaluation
 
-### Technical Risks
+### End of Day 1 Checklist:
+- [ ] **PRB Data**: 20+ company PRBs indexed and searchable
+- [ ] **Customization**: Templates customized for company format
+- [ ] **Testing**: All 10 MCP tools tested and working
+- [ ] **AI Integration**: Claude Code or Copilot tested successfully
+- [ ] **Demo Ready**: Demo scenarios prepared and rehearsed once
+- [ ] **Presentation**: Slides 100% complete
+- [ ] **Backup**: Demo video recorded
+- [ ] **Quality**: All 25 tests passing
 
-| Risk | Mitigation |
-|------|------------|
-| MCP server crashes during demo | Have video backup, test extensively |
-| Templates don't generate correctly | Use existing templates as fallback |
-| Documentation indexing fails | Manually create searchable docs |
-| Integration issues with Copilot | Show CLI mode instead |
+### End of Day 2 Checklist:
+- [ ] **Final Testing**: All features verified on demo laptop
+- [ ] **Rehearsals**: Presentation rehearsed 3+ times
+- [ ] **Equipment**: All A/V equipment tested
+- [ ] **Backup Plans**: Multiple backup plans in place
+- [ ] **Q&A Prep**: Common questions prepared with answers
+- [ ] **Team Ready**: Team confident, energized, ready to present
+- [ ] **Materials**: Slides, demo, video all accessible
 
-### Time Risks
-
-| Risk | Mitigation |
-|------|------------|
-| Running behind schedule | Cut lower-priority features |
-| Demo takes too long to prepare | Use existing demo, customize minimally |
-| Presentation not ready | Use template slides, fill in specifics |
-
-### Team Risks
-
-| Risk | Mitigation |
-|------|------------|
-| Team member unavailable | Cross-train, document everything |
-| Disagreements on approach | Timebox discussions, defer to team lead |
-| Burnout from long hours | Take breaks, stay energized |
-
----
-
-## Post-Hackathon Next Steps
-
-After winning 🏆:
-
-**Week 1-2**: Polish for production
-- [ ] Code review by senior developers
-- [ ] Security audit
-- [ ] Performance testing
-- [ ] Add authentication
-
-**Week 3-4**: Internal pilot
-- [ ] Deploy to staging environment
-- [ ] Invite 10-20 developers to beta test
-- [ ] Collect feedback
-- [ ] Fix critical issues
-
-**Week 5-8**: Production rollout
-- [ ] Deploy to production infrastructure
-- [ ] Train teams on how to use
-- [ ] Create video tutorials
-- [ ] Monitor adoption and usage
-
-**Month 3-6**: Expand and optimize
-- [ ] Add more templates (target: 20+)
-- [ ] Expand documentation coverage (target: 100+ docs)
-- [ ] Add advanced features (analytics, custom scoring)
-- [ ] Integrate with company SDLC tools
+### Presentation Quality Metrics:
+- [ ] **Timing**: Presentation fits within time limit (10-15 min)
+- [ ] **Demo**: Live demo works flawlessly or backup ready
+- [ ] **Clarity**: Message is clear and compelling
+- [ ] **Energy**: Team shows enthusiasm and confidence
+- [ ] **Q&A**: Questions answered confidently
+- [ ] **Impact**: Judges understand the value and ROI
 
 ---
 
-## Resources Needed
+## Risk Mitigation Strategy
 
-### Software
-- [ ] Python 3.10+
-- [ ] Node.js (for MCP Inspector)
-- [ ] Claude Code CLI
-- [ ] GitHub Copilot (enterprise license)
-- [ ] Docker Desktop
-- [ ] VS Code or IntelliJ IDEA
-
-### Access Required
-- [ ] Company GitHub repository access
-- [ ] Confluence API access (for doc fetching)
-- [ ] Internal wikis access
-- [ ] Sample company verticle codebases
-- [ ] Slack workspace access
-
-### Hardware
-- [ ] Laptops for each team member (4-5)
-- [ ] Presentation laptop + projector
-- [ ] Backup USB drives
-- [ ] Reliable internet connection
+| Risk | Likelihood | Impact | Mitigation Strategy |
+|------|------------|--------|---------------------|
+| Live demo fails during presentation | Medium | High | Have video backup + screenshots + verbal walkthrough prepared |
+| Company PRB data has quality issues | High | Medium | Test extensively on Day 1, document known issues, show how tool handles imperfect data |
+| Presentation runs too long | Medium | Medium | Practice with timer, have "must-say" vs "nice-to-say" marked on slides |
+| Technical questions we can't answer | Low | Medium | Prepare comprehensive Q&A doc, be honest and offer to follow up |
+| Team member unavailable Day 2 | Low | High | Cross-train on roles, have backup person for each role |
+| Projector/laptop issues | Medium | High | Have backup laptop configured identically, test early |
+| Network goes down during demo | Low | Medium | All demos work offline (no API dependencies), verify before presenting |
+| Templates don't match company format perfectly | Medium | Low | Show customization process, emphasize easy to adapt |
 
 ---
 
-## Tips for Success
+## Communication & Coordination
 
-**For Backend Developer (Role 1)**:
-- Start with one template, perfect it, then add more
-- Use existing platform templates as reference
-- Test generation early and often
-- Don't overcomplicate - simple templates work best
+### Communication Channels
 
-**For Content Manager (Role 2)**:
-- Quality over quantity - 10 great docs > 50 mediocre docs
-- Focus on most-used patterns and FAQs
-- Add lots of code examples
-- Make docs searchable (use good keywords)
+**Slack Channel**: `#hackathon-prb-assistant`
+- Use for: Quick questions, status updates, issue tracking, coordination
+- Response expectation: < 15 minutes during hackathon hours
 
-**For QA Engineer (Role 3)**:
-- Test early, test often
-- Document everything (screenshots help!)
-- Focus on happy path first, edge cases later
-- Create a checklist and work through it systematically
+**Shared Google Doc**: Real-time collaborative notes
+- Use for: Detailed notes, test results, feedback, Q&A prep
+- Update continuously throughout both days
 
-**For DevEx Engineer (Role 4)**:
-- Think like an end user
-- Make demo relatable (real scenarios)
-- Record video early in case live demo fails
-- Practice, practice, practice
+**Video Call** (if team is distributed):
+- Use for: Standup meetings, rehearsals, coordination
+- Tool: Zoom/Meet/Teams
 
-**For DevOps (Role 5)**:
-- Keep deployment simple
-- Have multiple backup plans
-- Test A/V setup before presentation
-- Stay calm during live demo
+### Check-in Schedule
+
+| Time | Type | Duration | Purpose |
+|------|------|----------|---------|
+| 9:00 AM (Day 1 & 2) | Morning Standup | 15 min | Set daily priorities |
+| 12:30 PM (Day 1 & 2) | Midday Sync | 10 min | Progress check |
+| 5:30 PM (Day 1) | End-of-Day Review | 30 min | Day 1 wrap-up, Day 2 planning |
+| 4:45 PM (Day 2) | Pre-Presentation Huddle | 15 min | Final check and motivation |
 
 ---
 
-## Motivational Quotes
+## Emergency Contacts & Support
 
-> "The only way to do great work is to love what you do." - Steve Jobs
+**During Hackathon**:
+- **Team Lead**: [Name, Phone, Email]
+- **Technical Support**: [Name, Phone, Email]
+- **A/V Support**: [Venue Contact, Phone]
+- **Hackathon Organizers**: [Contact Info]
 
-> "Code is like humor. When you have to explain it, it's bad." - Cory House
-
-> "First, solve the problem. Then, write the code." - John Johnson
-
-> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand." - Martin Fowler
+**Resources**:
+- **GitHub Repository**: https://github.com/karthik78180/fast-mcp-local (branch: feature/prb-sre-assistant)
+- **Documentation**: All docs in repo (README.md, FEATURES.md, etc.)
+- **Example PRBs**: `docs/prbs/examples/`
+- **Best Practices**: `docs/prbs/prb-best-practices.md`
 
 ---
 
-**Good luck, team! Let's build something amazing! 🚀**
+## Motivational Reminders
+
+> **"Done is better than perfect."** - Sheryl Sandberg
+
+> **"The only way to do great work is to love what you do."** - Steve Jobs
+
+> **"Innovation distinguishes between a leader and a follower."** - Steve Jobs
+
+### Remember:
+- ✅ **Focus on impact** - Show how this saves time and money
+- ✅ **Tell a story** - Make it relatable to SRE teams
+- ✅ **Practice makes perfect** - Rehearse until it's smooth
+- ✅ **Support each other** - We win as a team
+- ✅ **Have fun!** - Enjoy the hackathon experience
+- ✅ **Be proud** - We've built something truly valuable
 
 ---
 
-## Quick Reference: Key Commands
+## Quick Reference Commands
 
-### Start MCP Server
+### Most Used Commands
+
 ```bash
+# Start MCP server
 python3 -m fast_mcp_local.server
-```
 
-### Test with MCP Inspector
-```bash
-npx @modelcontextprotocol/inspector python3 -m fast_mcp_local.server
-```
+# Run tests
+pytest
+pytest -v  # verbose
 
-### CLI Commands
-```bash
-mcp search "query"
-mcp generate company-template
-mcp score ./Verticle.java --pattern company-best-practices
-mcp list-verticles
-```
+# CLI commands
+prb search "database timeout"
+prb list
+prb draft "incident description" --severity Critical
+prb template --type standard
+prb analyze my-prb.md
+prb validate my-prb.md
+prb actions my-prb.md
 
-### Run Tests
-```bash
-pytest -v
-pytest --cov
-```
-
-### Index New Docs
-```python
-from fast_mcp_local.loader import load_documents
-from fast_mcp_local.database import init_db
-
-init_db()
-load_documents("docs/company")
+# Git commands
+git status
+git add .
+git commit -m "message"
+git push origin feature/prb-sre-assistant
 ```
 
 ---
 
-**Last Updated**: [Date]
-**Version**: 1.0
-**Status**: Ready for hackathon! 🎉
+## Final Checklist - Use This Before Presenting!
+
+### 30 Minutes Before Presentation:
+
+**Equipment**:
+- [ ] Presentation laptop charged and working
+- [ ] Demo laptop charged and working
+- [ ] Backup laptop configured and ready
+- [ ] Projector connection tested
+- [ ] Clicker/remote working
+- [ ] USB drives with all materials
+- [ ] Demo video accessible on 3 devices
+- [ ] Internet connection tested (if needed)
+
+**Materials**:
+- [ ] Presentation slides loaded
+- [ ] Demo environment ready (MCP server running)
+- [ ] PRBs indexed and searchable
+- [ ] All CLI commands tested
+- [ ] Backup materials organized
+
+**Team**:
+- [ ] Everyone knows their part
+- [ ] Speaking order confirmed
+- [ ] Timing practiced
+- [ ] Q&A answers reviewed
+- [ ] Team is energized and confident
+
+**Mental Preparation**:
+- [ ] Deep breaths
+- [ ] Positive mindset
+- [ ] Remember the value we're delivering
+- [ ] Trust the preparation
+- [ ] Ready to win! 🏆
+
+---
+
+**Good luck, team! You've got this! 🚀**
+
+**Let's show them how PRB SRE Assistant transforms incident management!**
+
+**Let's win this hackathon! 🏆🎉**
+
+---
+
+**Last Updated**: For PRB SRE Assistant 2-day hackathon
+**Branch**: `feature/prb-sre-assistant`
+**Status**: Ready for hackathon execution! 🎉

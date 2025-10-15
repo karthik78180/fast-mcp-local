@@ -115,6 +115,145 @@ sequenceDiagram
     S-->>C: JSON response with results
 ```
 
+## CLI Architecture
+
+The CLI wrapper provides command-line access to all MCP tools, enabling integration with GitHub Copilot and other tools when direct MCP server integration is not available.
+
+### CLI System Architecture
+
+```mermaid
+graph TB
+    subgraph "User Interface"
+        User[Developer/Copilot]
+        Terminal[Terminal/Shell]
+    end
+
+    subgraph "CLI Layer"
+        CLI[CLI Wrapper<br/>cli.py<br/>Click Framework]
+    end
+
+    subgraph "Core System"
+        Server[Server Module<br/>server.py]
+
+        subgraph "Tools"
+            T1[search_documents]
+            T2[get_all_documents]
+            T3[get_document]
+            T4[generate_verticle]
+            T5[list_verticle_types]
+        end
+
+        DB[Database]
+        TE[Template Extractor]
+        Meta[Metadata]
+    end
+
+    User -->|mcp command| Terminal
+    Terminal -->|Execute| CLI
+
+    CLI -->|search| T1
+    CLI -->|list-docs| T2
+    CLI -->|get| T3
+    CLI -->|generate| T4
+    CLI -->|list-verticles| T5
+
+    T1 --> DB
+    T2 --> DB
+    T3 --> DB
+    T4 --> TE
+    T4 --> Meta
+    T5 --> Meta
+
+    DB -->|JSON| T1
+    T1 -->|JSON| CLI
+    CLI -->|JSON output| Terminal
+    Terminal -->|Display| User
+
+    style CLI fill:#d1f4ff
+    style Server fill:#e1f5ff
+    style User fill:#ffe1f4
+```
+
+### CLI Invocation Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User/Copilot
+    participant CLI as CLI Wrapper
+    participant Srv as Server Module
+    participant DB as Database
+    participant TE as Template Extractor
+
+    Note over U,TE: Example: mcp generate postgres
+
+    U->>CLI: mcp generate postgres
+    CLI->>CLI: Parse arguments
+    CLI->>Srv: generate_verticle("postgres")
+
+    Srv->>Srv: Load metadata
+    Srv->>Srv: Read template file
+    Srv->>TE: Extract code blocks
+    TE-->>Srv: Code blocks dict
+
+    Srv->>Srv: Build JSON response
+    Srv-->>CLI: JSON string
+    CLI->>CLI: Output JSON
+    CLI-->>U: JSON with verticle code
+
+    Note over U: Parse JSON and display
+
+    Note over U,TE: Example: mcp search "postgres"
+
+    U->>CLI: mcp search "postgres" --limit 5
+    CLI->>CLI: Parse arguments
+    CLI->>Srv: search_documents("postgres", 5)
+
+    Srv->>DB: Search query
+    DB->>DB: LIKE query + snippets
+    DB-->>Srv: Results list
+
+    Srv-->>CLI: JSON string
+    CLI-->>U: JSON with search results
+```
+
+### GitHub Copilot Integration Flow
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Copilot as GitHub Copilot
+    participant Inst as copilot-instructions.md
+    participant CLI as mcp CLI
+    participant Tools as MCP Tools
+
+    Dev->>Copilot: "Generate a postgres verticle"
+    Copilot->>Inst: Read instructions
+    Inst-->>Copilot: CLI command patterns
+
+    Copilot->>Copilot: Formulate command
+    Copilot->>CLI: Execute: mcp generate postgres
+    CLI->>Tools: generate_verticle("postgres")
+    Tools-->>CLI: JSON response
+    CLI-->>Copilot: JSON output
+
+    Copilot->>Copilot: Parse JSON
+    Copilot->>Copilot: Format response
+    Copilot-->>Dev: Formatted verticle code + docs
+
+    Note over Dev,Tools: Copilot automatically uses CLI<br/>No MCP server integration needed
+```
+
+### CLI Commands Mapping
+
+| CLI Command | Server Function | Description |
+|------------|----------------|-------------|
+| `mcp search <query>` | `search_documents()` | Search documents with contextual snippets |
+| `mcp list-docs` | `get_all_documents()` | List all indexed documents |
+| `mcp get <file>` | `get_document()` | Get full content of document |
+| `mcp generate <type>` | `generate_verticle()` | Generate verticle code from template |
+| `mcp list-verticles` | `list_verticle_types()` | List available verticle types |
+| `mcp ask <question>` | `search_documents()` | Quick search (limit=5) |
+
 ## Component Details
 
 ### 1. Server Module (server.py)
@@ -241,6 +380,46 @@ clear_cache()              # Clear metadata cache
   "use_cases": ["CRUD operations", "Connection pooling"]
 }
 ```
+
+### 6. CLI Module (cli.py)
+
+**Responsibilities:**
+- Command-line interface for all MCP tools
+- Argument parsing and validation
+- JSON output formatting
+- Entry point for GitHub Copilot integration
+
+**Key Commands:**
+```python
+search()              # Search documents
+list_docs()           # List all documents
+get()                 # Get document content
+generate()            # Generate verticle code
+list_verticles()      # List verticle types
+ask()                 # Quick search alias
+```
+
+**Framework:** Click (Python CLI framework)
+
+**Entry Point:**
+```bash
+# Installed as 'mcp' command via pyproject.toml
+mcp search "postgres"
+mcp generate http
+```
+
+**Design Principles:**
+1. **JSON Output**: All commands return structured JSON for machine parsing
+2. **Simple Interface**: Clear, intuitive command structure
+3. **Error Handling**: Graceful error messages in JSON format
+4. **Minimal Dependencies**: Only requires click library
+5. **Direct Integration**: Calls server functions directly, no network overhead
+
+**Use Cases:**
+- **GitHub Copilot**: Copilot executes commands to answer questions
+- **Shell Scripts**: Automate documentation queries
+- **CI/CD**: Generate code in build pipelines
+- **Development**: Quick access to docs and code generation
 
 ## Database Schema
 
@@ -427,18 +606,23 @@ fast-mcp-local/
 ├── src/fast_mcp_local/        # Source code
 │   ├── __init__.py
 │   ├── server.py              # Main server
+│   ├── cli.py                 # CLI wrapper (NEW)
 │   ├── database.py            # DB operations
 │   ├── loader.py              # Document loader
 │   ├── template_extractor.py  # Template parsing
 │   └── metadata.py            # Verticle metadata
 │
-├── tests/                     # Test suite (54 tests)
+├── tests/                     # Test suite (69 tests)
 │   ├── test_server.py
+│   ├── test_cli.py            # CLI tests (NEW)
 │   ├── test_database.py
 │   ├── test_loader.py
 │   ├── test_template_extractor.py
 │   ├── test_metadata.py
 │   └── test_verticle_tools.py
+│
+├── .github/
+│   └── copilot-instructions.md  # Copilot integration (NEW)
 │
 ├── documents.db              # SQLite database (gitignored)
 ├── ARCHITECTURE.md           # This file
@@ -523,13 +707,14 @@ Using OpenAI's tiktoken library:
 
 ### Test Coverage
 
-- **Unit Tests:** 54 tests covering all modules
+- **Unit Tests:** 69 tests covering all modules
 - **Database Tests:** 13 tests for CRUD operations
 - **Loader Tests:** 12 tests for file operations
 - **Server Tests:** 1 test for tool imports
 - **Template Extractor Tests:** 13 tests for code extraction
 - **Metadata Tests:** 10 tests for metadata loading
 - **Verticle Tools Tests:** 7 tests for end-to-end generation
+- **CLI Tests:** 15 tests for command-line interface
 
 ### Test Structure
 
@@ -538,6 +723,7 @@ tests/
 ├── test_database.py            # Database operations
 ├── test_loader.py              # Document loading
 ├── test_server.py              # Server tool imports
+├── test_cli.py                 # CLI commands (NEW)
 ├── test_template_extractor.py  # Template parsing
 ├── test_metadata.py            # Metadata loading
 └── test_verticle_tools.py      # Verticle generation
@@ -630,6 +816,52 @@ python3 -m fast_mcp_local.server
 **Issue:** Files not loading
 - **Cause:** Invalid UTF-8
 - **Solution:** Check file encoding, handle errors gracefully
+
+## CLI and GitHub Copilot Integration
+
+### Overview
+
+The CLI wrapper enables access to all MCP tools from the command line, providing a workaround for organizations where MCP server integration is disabled. GitHub Copilot can execute these CLI commands to provide intelligent assistance.
+
+### Key Features
+
+- **No MCP Server Required**: Uses direct CLI commands instead of JSON-RPC
+- **Copilot Compatible**: Copilot reads `.github/copilot-instructions.md` automatically
+- **JSON Output**: All commands return structured JSON for machine parsing
+- **Full Feature Parity**: All MCP tools accessible via CLI
+
+### Usage Examples
+
+```bash
+# Search documentation
+mcp search "postgres verticle" --limit 5
+
+# Generate code
+mcp generate postgres
+
+# List available templates
+mcp list-verticles
+
+# Get specific document
+mcp get "vertx/deployment-config.md"
+```
+
+### Copilot Workflow
+
+1. Developer asks Copilot a question
+2. Copilot reads copilot-instructions.md
+3. Copilot determines appropriate CLI command
+4. Copilot executes command and parses JSON
+5. Copilot presents formatted response to developer
+
+### Benefits
+
+- **Bypasses Restrictions**: Works when MCP integration is blocked
+- **No Configuration**: Copilot automatically discovers CLI capabilities
+- **Fast**: Direct function calls, no network overhead
+- **Reliable**: Same code path as MCP server
+
+For detailed Copilot usage patterns, see [COPILOT-USAGE.md](COPILOT-USAGE.md).
 
 ## Vert.x Code Generation
 

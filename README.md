@@ -18,7 +18,7 @@ Fast MCP Local is a Model Context Protocol (MCP) server that provides:
 - ⚡ Vert.x verticle code generation (PostgreSQL, HTTP, and more)
 - 🏗️ Template-based approach (no LLM/AI required)
 - 📦 Gradle dependency management
-- ✅ 54 comprehensive tests
+- ✅ 69 comprehensive tests
 
 ## Requirements
 
@@ -39,8 +39,18 @@ pip3 install -e ".[dev]"
 
 ## Running the Server
 
+### MCP Server Mode
 ```bash
 python3 -m fast_mcp_local.server
+```
+
+### CLI Mode (for GitHub Copilot integration)
+```bash
+# After installing, use the mcp command
+mcp --help
+mcp search "postgres verticle"
+mcp generate postgres
+mcp list-verticles
 ```
 
 ## Running Tests
@@ -51,25 +61,43 @@ pytest -v        # Verbose output
 pytest --cov     # With coverage report
 ```
 
-Currently: **54 tests passing** covering document management, template extraction, metadata loading, and verticle generation.
+Currently: **69 tests passing** covering document management, template extraction, metadata loading, verticle generation, and CLI interface.
 
 ## Tools
 
-### Document Query Tools
+### MCP Tools (Server Mode)
 
+**Document Query Tools:**
 - `search_documents(query: str, limit: int = 10)`: Search documents by content
 - `get_all_documents()`: Get a list of all documents with metadata
 - `get_document(filename: str)`: Get the full content of a specific document
 
-### Vert.x Verticle Generation Tools
-
+**Vert.x Verticle Generation Tools:**
 - `generate_verticle(verticle_type: str)`: Generate Vert.x verticle code from templates
   - Returns verticle Java code, Gradle dependencies, configuration example, and deployment code
   - Supported types: `postgres`, `http`
-  - Example: `generate_verticle("postgres")` returns a complete PostgreSQL verticle implementation
-
 - `list_verticle_types()`: List all available verticle templates
-  - Returns metadata for all available verticle types with descriptions and dependencies
+
+### CLI Commands (Copilot Integration)
+
+```bash
+# Search documentation
+mcp search "deployment patterns" --limit 5
+mcp ask "how to configure postgres"
+
+# List documents
+mcp list-docs
+
+# Get specific document
+mcp get "vertx/deployment-config.md"
+
+# Generate verticle code
+mcp generate postgres
+mcp generate http
+
+# List available types
+mcp list-verticles
+```
 
 See [docs/vertx/README.md](docs/vertx/README.md) for more information on Vert.x templates.
 
@@ -95,9 +123,35 @@ fast-mcp-local/
 │   ├── loader.py                  # Document loader
 │   ├── template_extractor.py      # Template parsing
 │   └── metadata.py                # Verticle metadata
-├── tests/                         # Test suite (54 tests)
+├── tests/                         # Test suite (69 tests)
 └── documents.db                   # SQLite database (auto-generated)
 ```
+
+## GitHub Copilot Integration
+
+This project includes GitHub Copilot workspace instructions that allow Copilot to query the documentation and generate code using the CLI tools.
+
+**Setup:**
+1. Copilot automatically reads `.github/copilot-instructions.md`
+2. Copilot can now execute CLI commands to help you:
+   - Search documentation: "Search for postgres examples"
+   - Generate code: "Generate an HTTP verticle"
+   - Find information: "How do I deploy verticles?"
+
+**Example Copilot conversation:**
+
+```
+You: "Generate a PostgreSQL verticle for my project"
+
+Copilot: I'll generate that for you.
+[Executes: mcp generate postgres]
+
+Here's your PostgreSQL verticle:
+
+[Shows generated Java code, Gradle dependencies, and configuration]
+```
+
+**Note:** This works even when MCP server integration is disabled in your organization, as it uses the CLI wrapper instead.
 
 ## Development
 

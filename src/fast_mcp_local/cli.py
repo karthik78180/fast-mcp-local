@@ -15,7 +15,11 @@ from .server import (
     list_migrations,
     get_migration_metadata,
     get_migration_guide,
-    get_migration_step
+    get_migration_step,
+    list_patterns,
+    get_pattern_metadata,
+    score_codebase,
+    get_compliance_report
 )
 
 
@@ -152,6 +156,57 @@ def migration_step(migration_id, step_number):
         mcp migration-step v1-to-v2 3
     """
     result = get_migration_step(migration_id, step_number)
+    click.echo(result)
+
+
+@cli.command(name='list-patterns')
+def list_patterns_cmd():
+    """List all available code scoring patterns.
+
+    Example:
+        mcp list-patterns
+    """
+    result = list_patterns()
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('pattern_id')
+def pattern_info(pattern_id):
+    """Get pattern metadata and scoring criteria.
+
+    Example:
+        mcp pattern-info vertx-best-practices
+    """
+    result = get_pattern_metadata(pattern_id)
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('codebase_path')
+@click.option('--pattern', '-p', required=True, help='Pattern ID to score against')
+def score(codebase_path, pattern):
+    """Score a codebase against a pattern.
+
+    Example:
+        mcp score ./src/MyVerticle.java --pattern vertx-best-practices
+        mcp score ./verticles/ -p vertx-best-practices
+    """
+    result = score_codebase(codebase_path, pattern)
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('codebase_path')
+@click.option('--pattern', '-p', required=True, help='Pattern ID to score against')
+def compliance(codebase_path, pattern):
+    """Get detailed compliance report in markdown format.
+
+    Example:
+        mcp compliance ./src/MyVerticle.java --pattern vertx-best-practices
+        mcp compliance ./verticles/ -p vertx-best-practices
+    """
+    result = get_compliance_report(pattern, codebase_path)
     click.echo(result)
 
 

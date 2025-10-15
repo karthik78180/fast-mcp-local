@@ -10,6 +10,7 @@ Fast MCP Local is a Model Context Protocol (MCP) server that provides:
 2. **Intelligent Search**: Full-text search across indexed documents with contextual snippets
 3. **Vert.x Code Generation**: Template-based generation of Vert.x verticle code with Gradle dependencies
 4. **Migration Guidance**: Step-by-step OpenRewrite migration guides with automated refactoring support
+5. **Code Scoring**: Rule-based codebase analysis against best practices and anti-patterns for Vert.x applications
 
 ## Features
 
@@ -18,9 +19,10 @@ Fast MCP Local is a Model Context Protocol (MCP) server that provides:
 - 🎯 Token counting using tiktoken (GPT-4 encoding)
 - ⚡ Vert.x verticle code generation (PostgreSQL, HTTP, and more)
 - 🔄 OpenRewrite migration guides with step-by-step instructions
+- 📊 Code scoring and compliance reporting against Vert.x best practices
 - 🏗️ Template-based approach (no LLM/AI required)
 - 📦 Gradle dependency management
-- ✅ 87 comprehensive tests
+- ✅ 120 comprehensive tests
 
 ## Requirements
 
@@ -86,6 +88,14 @@ Currently: **87 tests passing** covering document management, template extractio
 - `get_migration_guide(migration_id: str)`: Get complete migration guide with all documentation
 - `get_migration_step(migration_id: str, step_number: int)`: Get specific step instructions
 
+**Code Scoring Tools:**
+- `list_patterns()`: List all available code scoring patterns
+- `get_pattern_metadata(pattern_id: str)`: Get pattern metadata and scoring criteria
+- `score_codebase(codebase_path: str, pattern_id: str)`: Score a codebase against a pattern
+  - Returns overall score, grade, violations, and recommendations
+  - Supports: `vertx-best-practices`
+- `get_compliance_report(pattern_id: str, codebase_path: str)`: Get detailed compliance report in markdown format
+
 ### CLI Commands (Copilot Integration)
 
 ```bash
@@ -111,6 +121,12 @@ mcp list-migrations
 mcp migration-info v1-to-v2
 mcp migration-guide v1-to-v2
 mcp migration-step v1-to-v2 1
+
+# Code scoring
+mcp list-patterns
+mcp pattern-info vertx-best-practices
+mcp score ./src/MyVerticle.java --pattern vertx-best-practices
+mcp compliance ./verticles/ --pattern vertx-best-practices
 ```
 
 See [docs/vertx/README.md](docs/vertx/README.md) for more information on Vert.x templates.
@@ -131,12 +147,17 @@ fast-mcp-local/
 │   │   ├── templates/             # Verticle code templates
 │   │   ├── schemas/               # Verticle metadata (JSON)
 │   │   └── deployment-config.md   # Deployment guide
-│   └── migrations/                # Migration guides
-│       ├── v1-to-v2/              # V1 to V2 migration
-│       │   ├── migration-guide.md # Overview
-│       │   ├── steps.md           # Step-by-step instructions
-│       │   └── gradle-setup.md    # Gradle configuration
-│       └── schemas/               # Migration metadata (JSON)
+│   ├── migrations/                # Migration guides
+│   │   ├── v1-to-v2/              # V1 to V2 migration
+│   │   │   ├── migration-guide.md # Overview
+│   │   │   ├── steps.md           # Step-by-step instructions
+│   │   │   └── gradle-setup.md    # Gradle configuration
+│   │   └── schemas/               # Migration metadata (JSON)
+│   └── patterns/                  # Code scoring patterns
+│       └── vertx/                 # Vert.x patterns
+│           ├── scoring-rules.json # Scoring rules definition
+│           ├── best-practices.md  # Best practices guide
+│           └── anti-patterns.md   # Anti-patterns guide
 ├── src/fast_mcp_local/
 │   ├── server.py                  # Main MCP server
 │   ├── database.py                # SQLite operations
@@ -144,8 +165,10 @@ fast-mcp-local/
 │   ├── template_extractor.py      # Template parsing
 │   ├── metadata.py                # Verticle metadata
 │   ├── migration.py               # Migration guide management
+│   ├── pattern_matcher.py         # Pattern matching engine
+│   ├── scorer.py                  # Code scoring module
 │   └── cli.py                     # CLI wrapper
-├── tests/                         # Test suite (87 tests)
+├── tests/                         # Test suite (120 tests)
 └── documents.db                   # SQLite database (auto-generated)
 ```
 
@@ -227,6 +250,42 @@ Example migration metadata:
   },
   "total_steps": 5,
   "estimated_time": "15-20 minutes"
+}
+```
+
+### Adding New Scoring Patterns
+
+1. Create pattern directory: `docs/patterns/[pattern-name]/`
+2. Add pattern documentation:
+   - `scoring-rules.json` - Rule definitions with patterns and scores
+   - `best-practices.md` - Best practices guide
+   - `anti-patterns.md` - Anti-patterns guide
+3. Restart server - pattern automatically available via CLI and MCP tools
+
+Example scoring rules:
+```json
+{
+  "pattern_id": "vertx-best-practices",
+  "name": "Vert.x Best Practices Compliance",
+  "description": "Evaluate Vert.x verticle code",
+  "passing_threshold": 70,
+  "categories": {
+    "deployment": {
+      "weight": 20,
+      "description": "Proper deployment",
+      "rules": [
+        {
+          "id": "deployment-options",
+          "name": "Uses DeploymentOptions",
+          "pattern_type": "presence",
+          "pattern": "DeploymentOptions",
+          "score": 10,
+          "severity": "medium",
+          "suggestion": "Use DeploymentOptions"
+        }
+      ]
+    }
+  }
 }
 ```
 

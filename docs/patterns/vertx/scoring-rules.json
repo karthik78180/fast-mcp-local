@@ -1,0 +1,193 @@
+{
+  "pattern_id": "vertx-best-practices",
+  "name": "Vert.x Best Practices Compliance",
+  "description": "Evaluate Vert.x verticle code against best practices and common anti-patterns",
+  "version": "1.0.0",
+  "passing_threshold": 70,
+  "categories": {
+    "deployment": {
+      "weight": 20,
+      "description": "Proper verticle deployment and lifecycle management",
+      "rules": [
+        {
+          "id": "deployment-options",
+          "name": "Uses DeploymentOptions",
+          "description": "Verticle deployment should use DeploymentOptions for configuration",
+          "pattern_type": "presence",
+          "pattern": "DeploymentOptions",
+          "score": 10,
+          "severity": "medium",
+          "suggestion": "Use DeploymentOptions to configure verticle deployment",
+          "reference_doc": "vertx/deployment-config.md"
+        },
+        {
+          "id": "promise-usage",
+          "name": "Uses Promise for Async Start",
+          "description": "Verticle start method should use Promise for proper async initialization",
+          "pattern_type": "regex",
+          "pattern": "start\\(Promise<Void>\\s+\\w+\\)",
+          "score": 10,
+          "severity": "medium",
+          "suggestion": "Override start(Promise<Void>) instead of start()",
+          "reference_doc": "vertx/deployment-config.md"
+        }
+      ]
+    },
+    "error_handling": {
+      "weight": 30,
+      "description": "Proper error handling in async operations",
+      "rules": [
+        {
+          "id": "async-error-handlers",
+          "name": "Async Error Handling",
+          "description": "Async operations should have error handlers",
+          "pattern_type": "regex",
+          "pattern": "\\.(succeeded|failed)\\(\\)",
+          "score": 15,
+          "severity": "high",
+          "suggestion": "Always check ar.succeeded() and handle ar.failed() cases",
+          "reference_doc": "vertx/error-handling.md"
+        },
+        {
+          "id": "try-catch-blocking",
+          "name": "Try-Catch for Blocking Code",
+          "description": "Blocking operations should be wrapped in try-catch",
+          "pattern_type": "regex",
+          "pattern": "executeBlocking.*try\\s*\\{",
+          "score": 10,
+          "severity": "medium",
+          "suggestion": "Wrap blocking code in try-catch blocks",
+          "reference_doc": "vertx/error-handling.md"
+        },
+        {
+          "id": "no-blocking-in-event-loop",
+          "name": "No Blocking in Event Loop",
+          "description": "Thread.sleep and blocking operations should not be in event loop",
+          "pattern_type": "regex",
+          "pattern": "Thread\\.sleep|Thread\\.join",
+          "score": -20,
+          "severity": "critical",
+          "suggestion": "Use vertx.setTimer() or executeBlocking() instead of Thread.sleep()",
+          "reference_doc": "vertx/deployment-config.md"
+        },
+        {
+          "id": "no-printStackTrace",
+          "name": "Avoid printStackTrace",
+          "description": "Use proper logging instead of printStackTrace",
+          "pattern_type": "regex",
+          "pattern": "printStackTrace\\(\\)",
+          "score": -10,
+          "severity": "medium",
+          "suggestion": "Use logger.error() instead of printStackTrace()",
+          "reference_doc": "vertx/error-handling.md"
+        }
+      ]
+    },
+    "configuration": {
+      "weight": 25,
+      "description": "Externalized configuration and security",
+      "rules": [
+        {
+          "id": "config-usage",
+          "name": "Uses config() Method",
+          "description": "Verticle should use config() method for configuration",
+          "pattern_type": "presence",
+          "pattern": "config()",
+          "score": 10,
+          "severity": "medium",
+          "suggestion": "Use config().get*() methods to access configuration",
+          "reference_doc": "vertx/deployment-config.md"
+        },
+        {
+          "id": "no-hardcoded-credentials",
+          "name": "No Hardcoded Credentials",
+          "description": "Credentials should not be hardcoded in source code",
+          "pattern_type": "regex",
+          "pattern": "(password|apiKey|secret|token)\\s*=\\s*\"[^\"]{4,}\"",
+          "score": -25,
+          "severity": "critical",
+          "suggestion": "Move credentials to configuration files or environment variables",
+          "reference_doc": "vertx/deployment-config.md"
+        },
+        {
+          "id": "no-hardcoded-urls",
+          "name": "No Hardcoded URLs",
+          "description": "URLs and endpoints should be externalized",
+          "pattern_type": "regex",
+          "pattern": "String\\s+\\w*(url|endpoint|host)\\w*\\s*=\\s*\"http",
+          "score": -10,
+          "severity": "medium",
+          "suggestion": "Move URLs to configuration",
+          "reference_doc": "vertx/deployment-config.md"
+        }
+      ]
+    },
+    "database": {
+      "weight": 15,
+      "description": "Database client usage and connection pooling",
+      "rules": [
+        {
+          "id": "connection-pooling",
+          "name": "Uses Connection Pooling",
+          "description": "Database connections should use connection pools",
+          "pattern_type": "regex",
+          "pattern": "PoolOptions|PgPool\\.pool|MySQLPool\\.pool",
+          "score": 15,
+          "severity": "high",
+          "suggestion": "Use connection pools (PgPool, MySQLPool) instead of individual connections",
+          "reference_doc": "vertx/templates/postgres-verticle.md"
+        },
+        {
+          "id": "parameterized-queries",
+          "name": "Parameterized Queries",
+          "description": "Use parameterized queries to prevent SQL injection",
+          "pattern_type": "regex",
+          "pattern": "preparedQuery|Tuple\\.of",
+          "score": 10,
+          "severity": "high",
+          "suggestion": "Use preparedQuery with parameters instead of string concatenation",
+          "reference_doc": "vertx/templates/postgres-verticle.md"
+        },
+        {
+          "id": "no-sql-concat",
+          "name": "No SQL String Concatenation",
+          "description": "SQL queries should not use string concatenation",
+          "pattern_type": "regex",
+          "pattern": "\"SELECT.*\"\\s*\\+|\"INSERT.*\"\\s*\\+|\"UPDATE.*\"\\s*\\+",
+          "score": -20,
+          "severity": "critical",
+          "suggestion": "Use parameterized queries instead of string concatenation",
+          "reference_doc": "vertx/templates/postgres-verticle.md"
+        }
+      ]
+    },
+    "http": {
+      "weight": 10,
+      "description": "HTTP server and client best practices",
+      "rules": [
+        {
+          "id": "router-usage",
+          "name": "Uses Vert.x Router",
+          "description": "HTTP servers should use Vert.x Web Router",
+          "pattern_type": "presence",
+          "pattern": "Router.router",
+          "score": 10,
+          "severity": "low",
+          "suggestion": "Use Router.router(vertx) for HTTP routing",
+          "reference_doc": "vertx/templates/http-verticle.md"
+        },
+        {
+          "id": "error-handler",
+          "name": "Global Error Handler",
+          "description": "Router should have global error handler",
+          "pattern_type": "regex",
+          "pattern": "router\\.errorHandler|route\\(\\)\\.failureHandler",
+          "score": 10,
+          "severity": "medium",
+          "suggestion": "Add router.errorHandler() or route().failureHandler()",
+          "reference_doc": "vertx/templates/http-verticle.md"
+        }
+      ]
+    }
+  }
+}

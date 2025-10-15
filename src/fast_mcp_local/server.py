@@ -9,6 +9,7 @@ from .loader import initialize_documents
 from .template_extractor import TemplateExtractor
 from .metadata import VerticleMetadata
 from . import migration
+from . import scorer
 
 # Initialize FastMCP server
 mcp = FastMCP("fast-mcp-local")
@@ -236,6 +237,53 @@ def get_migration_step(migration_id: str, step_number: int) -> str:
     return migration.get_migration_step(migration_id, step_number)
 
 
+def list_patterns() -> str:
+    """List all available scoring patterns.
+
+    Returns:
+        JSON array of available patterns with metadata
+    """
+    return scorer.list_patterns()
+
+
+def get_pattern_metadata(pattern_id: str) -> str:
+    """Get pattern metadata and scoring criteria.
+
+    Args:
+        pattern_id: Pattern identifier (e.g., 'vertx-best-practices')
+
+    Returns:
+        JSON string with pattern metadata or error
+    """
+    return scorer.get_pattern_metadata(pattern_id)
+
+
+def score_codebase(codebase_path: str, pattern_id: str) -> str:
+    """Score a codebase against a pattern.
+
+    Args:
+        codebase_path: Path to codebase directory or file
+        pattern_id: Pattern identifier (e.g., 'vertx-best-practices')
+
+    Returns:
+        JSON string with scoring results including violations and recommendations
+    """
+    return scorer.score_codebase(codebase_path, pattern_id)
+
+
+def get_compliance_report(pattern_id: str, codebase_path: str) -> str:
+    """Get detailed compliance report in markdown format.
+
+    Args:
+        pattern_id: Pattern identifier (e.g., 'vertx-best-practices')
+        codebase_path: Path to codebase directory or file
+
+    Returns:
+        Markdown formatted compliance report
+    """
+    return scorer.get_compliance_report(pattern_id, codebase_path)
+
+
 # Register tools with MCP
 mcp.tool()(search_documents)
 mcp.tool()(get_all_documents)
@@ -246,6 +294,10 @@ mcp.tool()(list_migrations)
 mcp.tool()(get_migration_metadata)
 mcp.tool()(get_migration_guide)
 mcp.tool()(get_migration_step)
+mcp.tool()(list_patterns)
+mcp.tool()(get_pattern_metadata)
+mcp.tool()(score_codebase)
+mcp.tool()(get_compliance_report)
 
 
 if __name__ == "__main__":

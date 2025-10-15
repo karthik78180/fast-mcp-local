@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A FastMCP server implementation with document management capabilities. The server automatically loads markdown documents from the `docs/` folder, stores them in a SQLite database with token counts (using tiktoken), and provides tools to query and retrieve document information.
+A FastMCP server implementation with document management, Vert.x code generation, migration guidance, and code scoring capabilities. The server automatically loads markdown documents from the `docs/` folder, stores them in a SQLite database with token counts (using tiktoken), and provides tools to query documents, generate Vert.x verticles, execute OpenRewrite migrations, and score codebases against best practices.
 
 ## Requirements
 
@@ -47,26 +47,36 @@ This opens a web interface where you can:
 ### Project Structure
 ```
 docs/                       # Markdown documents (recursively scanned on startup)
-  mcp-overview.md
-  fastmcp-guide.md
-  building-tools.md
-  tutorials/                # Nested folders supported
-    getting-started.md
-    best-practices.md
-  api/
-    reference/
-      tools.md
-      resources.md
+  vertx/                    # Vert.x templates and guides
+    templates/              # Verticle code templates
+    schemas/                # Verticle metadata
+  migrations/               # Migration guides
+    v1-to-v2/               # V1 to V2 migration
+    schemas/                # Migration metadata
+  patterns/                 # Code scoring patterns
+    vertx/                  # Vert.x patterns
+      scoring-rules.json    # Scoring rules definition
+      best-practices.md     # Best practices guide
+      anti-patterns.md      # Anti-patterns guide
 src/fast_mcp_local/
-  __init__.py          # Package initialization
-  server.py            # Main MCP server with tools
-  database.py          # SQLite database operations
-  loader.py            # Document loading and token counting
+  __init__.py               # Package initialization
+  server.py                 # Main MCP server with tools
+  database.py               # SQLite database operations
+  loader.py                 # Document loading and token counting
+  template_extractor.py     # Template parsing
+  metadata.py               # Verticle metadata
+  migration.py              # Migration guide management
+  pattern_matcher.py        # Pattern matching engine
+  scorer.py                 # Code scoring module
+  cli.py                    # CLI wrapper
 tests/
-  test_server.py       # Server tool tests
-  test_database.py     # Database operation tests
-  test_loader.py       # Document loader tests
-documents.db           # SQLite database (auto-generated, gitignored)
+  test_server.py            # Server tool tests
+  test_database.py          # Database operation tests
+  test_loader.py            # Document loader tests
+  test_pattern_matcher.py   # Pattern matcher tests
+  test_scorer.py            # Scorer tests
+  ... (120 tests total)
+documents.db                # SQLite database (auto-generated, gitignored)
 ```
 
 ### Key Components
@@ -87,6 +97,36 @@ documents.db           # SQLite database (auto-generated, gitignored)
   - Stores documents with relative paths (e.g., "tutorials/guide.md")
   - Uses tiktoken for accurate token counting (GPT-4 encoding)
   - Automatically loads documents from `docs/` folder on server startup
+
+- **template_extractor.py**: Template parsing for Vert.x code generation
+  - Extracts code blocks from markdown templates
+  - Supports Java, JSON, and deployment examples
+
+- **metadata.py**: Verticle metadata management
+  - Loads verticle metadata from JSON schemas
+  - Provides verticle type listings
+
+- **migration.py**: Migration guide management
+  - Lists available migrations
+  - Provides metadata and step-by-step guides
+  - Supports OpenRewrite integration
+
+- **pattern_matcher.py**: Pattern matching engine
+  - Regex-based code pattern matching
+  - Text presence/absence checking
+  - File and directory scanning
+  - Supports multiple file extensions
+
+- **scorer.py**: Code scoring module
+  - Rule-based codebase analysis
+  - Category-weighted scoring system
+  - Violation tracking and reporting
+  - Markdown compliance report generation
+  - Currently supports: `vertx-best-practices` pattern
+
+- **cli.py**: Command-line interface wrapper
+  - Provides CLI access to all MCP tools
+  - GitHub Copilot integration support
 
 - Each tool has type hints and docstrings that define the MCP interface
 

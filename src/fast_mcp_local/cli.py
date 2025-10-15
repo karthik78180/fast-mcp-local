@@ -1,240 +1,187 @@
-"""CLI for Fast MCP Local.
+"""CLI for PRB SRE Assistant.
 
-Command-line interface for document search, code generation, migrations, and scoring.
+Command-line interface for PRB management, drafting, and analysis.
 """
 
 import sys
 import click
 from .server import (
-    search_documents,
-    get_document,
-    list_documents,
-    generate_verticle,
-    list_verticle_types,
-    list_migrations,
-    get_migration_metadata,
-    get_migration_guide,
-    get_migration_step,
-    list_patterns,
-    get_pattern_metadata,
-    score_codebase,
-    get_compliance_report
+    search_prbs,
+    get_prb,
+    list_prbs,
+    draft_prb,
+    create_prb_template,
+    suggest_prb_sections,
+    analyze_prb,
+    validate_prb,
+    extract_action_items,
+    parse_prb
 )
 
 
 @click.group()
 @click.version_option()
 def cli():
-    """Fast MCP Local - Vert.x Development Assistant
+    """PRB SRE Assistant - Problem Record Management Tool
 
-    Search documentation and generate verticle code.
+    Tools for SRE teams to manage incident PRBs (Problem Records).
     """
     pass
 
 
 # =============================================================================
-# Document Commands
+# Search Commands
 # =============================================================================
 
 @cli.command()
 @click.argument('query')
 @click.option('--limit', '-l', default=10, help='Maximum results')
 def search(query, limit):
-    """Search company documentation.
+    """Search past PRB documentation.
 
     Examples:
-        mcp search "async handler"
-        mcp search "postgres" --limit 5
+        prb search "database timeout"
+        prb search "memory leak" --limit 5
     """
-    result = search_documents(query, limit)
+    result = search_prbs(query, limit)
     click.echo(result)
 
 
 @cli.command()
-def list_docs():
-    """List all indexed documents.
+def list():
+    """List all available PRBs.
 
     Example:
-        mcp list-docs
+        prb list
     """
-    result = list_documents()
+    result = list_prbs()
     click.echo(result)
 
 
 @cli.command()
 @click.argument('filename')
 def get(filename):
-    """Get specific document content.
+    """Get specific PRB content.
 
     Examples:
-        mcp get "vertx/templates/platform-async-handler.md"
-        mcp get "company/best-practices.md"
+        prb get "prb-2024-001-database-outage.md"
     """
-    result = get_document(filename)
+    result = get_prb(filename)
     click.echo(result)
 
 
 # =============================================================================
-# Code Generation Commands
+# Drafting Commands
 # =============================================================================
 
 @cli.command()
-@click.argument('verticle_type')
-def generate(verticle_type):
-    """Generate verticle code from template.
+@click.argument('description')
+@click.option('--severity', '-s', default='High',
+              help='Severity (Critical/High/Medium/Low)')
+@click.option('--systems', default='',
+              help='Affected systems (comma-separated)')
+def draft(description, severity, systems):
+    """Generate a PRB draft from incident description.
 
     Examples:
-        mcp generate platform-async
-        mcp generate platform-sync
-        mcp generate platform-multipart
+        prb draft "API gateway returned 503 errors"
+        prb draft "Database timeout" --severity Critical --systems "api,db"
     """
-    result = generate_verticle(verticle_type)
+    result = draft_prb(description, severity, systems)
     click.echo(result)
 
 
 @cli.command()
-def list_types():
-    """List all available verticle templates.
-
-    Example:
-        mcp list-types
-    """
-    result = list_verticle_types()
-    click.echo(result)
-
-
-@cli.command(name='list-verticles')
-def list_verticles():
-    """List all available verticle templates (alias for list-types).
-
-    Example:
-        mcp list-verticles
-    """
-    result = list_verticle_types()
-    click.echo(result)
-
-
-# =============================================================================
-# Convenience Aliases
-# =============================================================================
-
-@cli.command()
-@click.argument('query')
-def ask(query):
-    """Quick documentation search (alias for search).
-
-    Example:
-        mcp ask "how to configure platform"
-    """
-    result = search_documents(query, limit=5)
-    click.echo(result)
-
-
-# =============================================================================
-# Migration Commands
-# =============================================================================
-
-@cli.command(name='list-migrations')
-def list_migrations_cmd():
-    """List all available migration guides.
-
-    Example:
-        mcp list-migrations
-    """
-    result = list_migrations()
-    click.echo(result)
-
-
-@cli.command()
-@click.argument('migration_id')
-def migration_info(migration_id):
-    """Get migration metadata (versions, dependencies, steps).
-
-    Example:
-        mcp migration-info v1-to-v2
-    """
-    result = get_migration_metadata(migration_id)
-    click.echo(result)
-
-
-@cli.command()
-@click.argument('migration_id')
-def migration_guide(migration_id):
-    """Get full migration guide with all documentation.
-
-    Example:
-        mcp migration-guide v1-to-v2
-    """
-    result = get_migration_guide(migration_id)
-    click.echo(result)
-
-
-@cli.command()
-@click.argument('migration_id')
-@click.argument('step_number', type=int)
-def migration_step(migration_id, step_number):
-    """Get specific step instructions from migration guide.
+@click.option('--type', '-t', default='standard',
+              help='Template type (standard/critical/postmortem)')
+def template(type):
+    """Create a blank PRB template.
 
     Examples:
-        mcp migration-step v1-to-v2 1
-        mcp migration-step v1-to-v2 3
+        prb template
+        prb template --type critical
+        prb template --type postmortem
     """
-    result = get_migration_step(migration_id, step_number)
+    result = create_prb_template(type)
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('prb_file', type=click.Path(exists=True))
+def suggest(prb_file):
+    """Suggest missing sections for a partial PRB.
+
+    Examples:
+        prb suggest my-draft.md
+    """
+    with open(prb_file, 'r') as f:
+        content = f.read()
+
+    result = suggest_prb_sections(content)
     click.echo(result)
 
 
 # =============================================================================
-# Code Scoring Commands
+# Analysis Commands
 # =============================================================================
 
-@cli.command(name='list-patterns')
-def list_patterns_cmd():
-    """List all available code scoring patterns.
-
-    Example:
-        mcp list-patterns
-    """
-    result = list_patterns()
-    click.echo(result)
-
-
 @cli.command()
-@click.argument('pattern_id')
-def pattern_info(pattern_id):
-    """Get pattern metadata and scoring criteria.
-
-    Example:
-        mcp pattern-info vertx-best-practices
-    """
-    result = get_pattern_metadata(pattern_id)
-    click.echo(result)
-
-
-@cli.command()
-@click.argument('codebase_path')
-@click.option('--pattern', '-p', required=True, help='Pattern ID to score against')
-def score(codebase_path, pattern):
-    """Score a codebase against a pattern.
+@click.argument('prb_file', type=click.Path(exists=True))
+def analyze(prb_file):
+    """Analyze PRB completeness and quality.
 
     Examples:
-        mcp score ./src/MyVerticle.java --pattern vertx-best-practices
-        mcp score ./verticles/ -p vertx-best-practices
+        prb analyze prb-2024-001.md
     """
-    result = score_codebase(codebase_path, pattern)
+    with open(prb_file, 'r') as f:
+        content = f.read()
+
+    result = analyze_prb(content)
     click.echo(result)
 
 
 @cli.command()
-@click.argument('codebase_path')
-@click.option('--pattern', '-p', required=True, help='Pattern ID to score against')
-def compliance(codebase_path, pattern):
-    """Get detailed compliance report in markdown format.
+@click.argument('prb_file', type=click.Path(exists=True))
+def validate(prb_file):
+    """Validate PRB structure and completeness.
 
     Examples:
-        mcp compliance ./src/MyVerticle.java --pattern vertx-best-practices
-        mcp compliance ./verticles/ -p vertx-best-practices
+        prb validate prb-2024-001.md
     """
-    result = get_compliance_report(pattern, codebase_path)
+    with open(prb_file, 'r') as f:
+        content = f.read()
+
+    result = validate_prb(content)
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('prb_file', type=click.Path(exists=True))
+def actions(prb_file):
+    """Extract action items from a PRB.
+
+    Examples:
+        prb actions prb-2024-001.md
+    """
+    with open(prb_file, 'r') as f:
+        content = f.read()
+
+    result = extract_action_items(content)
+    click.echo(result)
+
+
+@cli.command()
+@click.argument('prb_file', type=click.Path(exists=True))
+def parse(prb_file):
+    """Parse PRB and extract structured data.
+
+    Examples:
+        prb parse prb-2024-001.md
+    """
+    with open(prb_file, 'r') as f:
+        content = f.read()
+
+    result = parse_prb(content)
     click.echo(result)
 
 
@@ -248,27 +195,21 @@ def help_commands():
 
     Common workflows:
 
-    1. Search documentation:
-       mcp search "async handler"
-       mcp ask "configuration guide"
+    1. Search past PRBs:
+       prb search "database timeout"
+       prb list
 
-    2. List available docs:
-       mcp list-docs
+    2. Draft a new PRB:
+       prb draft "API returned 503 errors" --severity Critical
+       prb template --type critical
 
-    3. Generate code:
-       mcp list-types              # See all templates
-       mcp generate platform-async  # Generate code
+    3. Analyze existing PRB:
+       prb analyze my-prb.md
+       prb validate my-prb.md
+       prb actions my-prb.md
 
-    4. Migrations:
-       mcp list-migrations         # See all migrations
-       mcp migration-guide v1-to-v2  # Get full guide
-
-    5. Code scoring:
-       mcp list-patterns           # See all patterns
-       mcp score ./MyVerticle.java --pattern vertx-best-practices
-
-    6. Get specific doc:
-       mcp get "company/best-practices.md"
+    4. Get specific PRB:
+       prb get "prb-2024-001.md"
     """
     click.echo(__doc__)
 

@@ -1,419 +1,478 @@
-# Fast MCP Local
+# PRB SRE Assistant
 
-A FastMCP server that provides intelligent document management, Vert.x verticle code generation, and OpenRewrite-based code migration capabilities.
+**AI-powered Problem Record (PRB) management for SRE teams**
 
-## What This Does
+Quickly draft, analyze, and manage incident PRBs using MCP (Model Context Protocol) tools integrated with your IDE and AI assistants.
 
-Fast MCP Local is a Model Context Protocol (MCP) server that provides:
+---
 
-1. **Document Management**: Automatically indexes markdown documentation with SQLite storage and token counting
-2. **Intelligent Search**: Full-text search across indexed documents with contextual snippets
-3. **Vert.x Code Generation**: Template-based generation of Vert.x verticle code with Gradle dependencies
-   - **Platform Handlers**: Generate code for custom platform architecture (AsyncHandler, SyncHandler, MultipartHandler)
-   - **Standard Verticles**: Generate traditional AbstractVerticle implementations
-4. **Migration Guidance**: Step-by-step OpenRewrite migration guides with automated refactoring support
-5. **Code Scoring**: Rule-based codebase analysis against best practices and anti-patterns for Vert.x applications
+## 🎯 What is This?
 
-## Features
+PRB SRE Assistant helps SRE teams handle incident response and postmortems by:
 
-- 📚 Recursive markdown document indexing
-- 🔍 Fast full-text search with SQLite
-- 🎯 Token counting using tiktoken (GPT-4 encoding)
-- ⚡ Vert.x verticle code generation (PostgreSQL, HTTP, and more)
-- 🎭 **Platform handler generation** (AsyncHandler, SyncHandler, MultipartHandler)
-  - AsyncHandler: Non-blocking operations (PostgreSQL, HTTP clients)
-  - SyncHandler: Blocking operations (SOAP, JDBC)
-  - MultipartHandler: File uploads (local storage, S3)
-- 🔄 OpenRewrite migration guides with step-by-step instructions
-- 📊 Code scoring and compliance reporting against Vert.x best practices
-- 🏗️ Template-based approach (no LLM/AI required)
-- 📦 Gradle dependency management
-- ✅ 120 comprehensive tests
+1. **Drafting PRBs** from incident descriptions automatically
+2. **Analyzing PRB quality** and completeness with scoring
+3. **Searching past PRBs** to learn from similar incidents
+4. **Validating PRB structure** to ensure all sections are present
+5. **Extracting action items** with owners and due dates
+6. **Suggesting improvements** based on best practices
 
-## Requirements
+---
 
-- Python 3.10 or higher (required by FastMCP)
+## 🚀 Quick Start (5 Minutes)
 
-## Setup
+### Step 1: Install
 
-1. Create a virtual environment (use python3.10, python3.11, python3.12, or python3.13):
 ```bash
+# Clone and install
+git clone https://github.com/karthik78180/fast-mcp-local.git
+cd fast-mcp-local
+git checkout feature/prb-sre-assistant
+
+# Create virtual environment and install
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
 ```
 
-2. Install dependencies:
+### Step 2: Test the CLI
+
 ```bash
-pip3 install -e ".[dev]"
+# Search past PRBs
+prb search "database timeout"
+
+# List all PRBs
+prb list
+
+# Draft a new PRB
+prb draft "API gateway returned 503 errors" --severity Critical
+
+# Get a template
+prb template --type critical
 ```
 
-## Running the Server
+### Step 3: Test the MCP Server
 
-### MCP Server Mode
 ```bash
+# Start the server
 python3 -m fast_mcp_local.server
+
+# In another terminal, test tools
+# (or use with Claude Code, GitHub Copilot, etc.)
 ```
 
-### CLI Mode (for GitHub Copilot integration)
-```bash
-# After installing, use the mcp command
-mcp --help
-mcp search "postgres verticle"
-mcp generate postgres
-mcp list-verticles
-```
+---
 
-## Running Tests
+## 📦 What's Included
 
-```bash
-pytest           # Run all tests
-pytest -v        # Verbose output
-pytest --cov     # With coverage report
-```
+### 10 MCP Tools
 
-Currently: **87 tests passing** covering document management, template extraction, metadata loading, verticle generation, migration guides, and CLI interface.
+**Search & Discovery:**
+1. `search_prbs(query, limit)` - Search past PRB documentation
+2. `get_prb(filename)` - Get specific PRB content
+3. `list_prbs()` - List all available PRBs
 
-## Tools
+**PRB Drafting:**
+4. `draft_prb(description, severity, systems)` - Generate PRB from incident
+5. `create_prb_template(type)` - Get blank template (standard/critical/postmortem)
+6. `suggest_prb_sections(partial_prb)` - Suggest missing sections
 
-### MCP Tools (Server Mode)
+**PRB Analysis:**
+7. `analyze_prb(content)` - Analyze completeness and quality
+8. `validate_prb(content)` - Validate structure
+9. `extract_action_items(content)` - Extract all action items
+10. `parse_prb(content)` - Parse and extract structured data
 
-**Document Query Tools:**
-- `search_documents(query: str, limit: int = 10)`: Search documents by content
-- `get_all_documents()`: Get a list of all documents with metadata
-- `get_document(filename: str)`: Get the full content of a specific document
-
-**Vert.x Verticle Generation Tools:**
-- `generate_verticle(verticle_type: str)`: Generate Vert.x verticle code from templates
-  - Returns verticle Java code, Gradle dependencies, configuration example, and deployment code
-  - **Platform Handlers**: `platform-async`, `platform-sync`, `platform-multipart`
-  - Standard Verticles: `postgres`, `http`
-- `list_verticle_types()`: List all available verticle templates
-
-**Migration Tools:**
-- `list_migrations()`: List all available migration guides
-- `get_migration_metadata(migration_id: str)`: Get migration metadata (versions, dependencies, steps)
-- `get_migration_guide(migration_id: str)`: Get complete migration guide with all documentation
-- `get_migration_step(migration_id: str, step_number: int)`: Get specific step instructions
-
-**Code Scoring Tools:**
-- `list_patterns()`: List all available code scoring patterns
-- `get_pattern_metadata(pattern_id: str)`: Get pattern metadata and scoring criteria
-- `score_codebase(codebase_path: str, pattern_id: str)`: Score a codebase against a pattern
-  - Returns overall score, grade, violations, and recommendations
-  - Supports: `vertx-best-practices`
-- `get_compliance_report(pattern_id: str, codebase_path: str)`: Get detailed compliance report in markdown format
-
-### CLI Commands (Copilot Integration)
+### 10 CLI Commands
 
 ```bash
-# Search documentation
-mcp search "deployment patterns" --limit 5
-mcp ask "how to configure postgres"
+prb search <query>              # Search past PRBs
+prb list                        # List all PRBs
+prb get <filename>              # Get specific PRB
 
-# List documents
-mcp list-docs
+prb draft <description>         # Generate PRB draft
+prb template [--type TYPE]      # Get blank template
+prb suggest <prb-file>          # Suggest missing sections
 
-# Get specific document
-mcp get "vertx/deployment-config.md"
-
-# Generate platform handler code
-mcp generate platform-async      # AsyncHandler (PostgreSQL, HTTP clients)
-mcp generate platform-sync        # SyncHandler (SOAP, JDBC)
-mcp generate platform-multipart   # MultipartHandler (file uploads)
-
-# Generate standard verticle code
-mcp generate postgres
-mcp generate http
-
-# List available types
-mcp list-verticles
-
-# Migration tools
-mcp list-migrations
-mcp migration-info v1-to-v2
-mcp migration-guide v1-to-v2
-mcp migration-step v1-to-v2 1
-
-# Code scoring
-mcp list-patterns
-mcp pattern-info vertx-best-practices
-mcp score ./src/MyVerticle.java --pattern vertx-best-practices
-mcp compliance ./verticles/ --pattern vertx-best-practices
+prb analyze <prb-file>          # Analyze quality
+prb validate <prb-file>         # Validate structure
+prb actions <prb-file>          # Extract action items
+prb parse <prb-file>            # Parse structured data
 ```
 
-See [docs/vertx/README.md](docs/vertx/README.md) for more information on Vert.x templates.
+### Documentation
 
-## Platform Handler Architecture
+- **PRB Best Practices** (`docs/prbs/prb-best-practices.md`) - Complete guide
+- **Example PRBs** (`docs/prbs/examples/`) - Real-world examples
+  - Database connection pool exhaustion
+  - Memory leak in Kubernetes pod
 
-This MCP server supports code generation for a **custom platform architecture** where teams implement handler interfaces instead of extending AbstractVerticle. The platform manages deployment, routing, and configuration, allowing teams to focus solely on business logic.
+---
 
-### Handler Types
+## 💡 Use Cases
 
-**AsyncHandler** - Non-blocking operations on event loop
-- Use for: HTTP clients, async databases (PostgreSQL, MongoDB), message queues, Redis
-- Thread model: Event loop (never block)
-- Examples: PostgreSQL queries, external REST API calls
+### Use Case 1: On-Call SRE During Incident
 
-**SyncHandler** - Blocking operations on worker threads
-- Use for: SOAP services, JDBC databases, file I/O, legacy systems
-- Thread model: Worker pool (blocking is safe)
-- Examples: SOAP web services, traditional JDBC queries
+**Scenario**: You're on-call and just got paged for a production incident.
 
-**MultipartHandler** - File uploads on worker threads
-- Use for: File uploads, image processing, document storage
-- Thread model: Worker pool (file I/O is safe)
-- Examples: Local file uploads, S3 image uploads
+```bash
+# 1. Draft a PRB immediately
+prb draft "API gateway returning 503 errors, database timeouts observed" \
+  --severity Critical \
+  --systems "api-gateway,database"
 
-### Platform Pattern
+# Output: PRB draft with timestamp, structure, suggested actions
 
-```java
-public class MyVerticle implements AsyncHandler {  // or SyncHandler, MultipartHandler
-    private JsonObject config;
+# 2. Copy the draft, start filling in timeline as incident progresses
+# 3. Search for similar past incidents
+prb search "database timeout"
 
-    @Override
-    public void start(Vertx vertx, JsonObject config) {
-        this.config = config;
-        // Initialize resources using config().getData()
-        JsonObject dbConfig = config().getData().getJsonObject("database");
-        // Setup connection pools, HTTP clients, etc.
-    }
-
-    @Override
-    public void handle(RoutingContext context) {
-        // Business logic here
-        // Query databases, call APIs, process files, etc.
-    }
-
-    @Override
-    public void stop() {
-        // Cleanup resources
-    }
-
-    @Override
-    public JsonObject getData() {
-        return config;
-    }
-}
+# 4. Learn from past resolutions
+prb get "prb-2024-001-database-connection-pool-exhaustion.md"
 ```
 
-### Configuration Structure
+**Result**: PRB started in < 2 minutes, similar incidents found to guide response.
 
-Platform-managed configuration follows this structure:
+### Use Case 2: Post-Incident PRB Review
+
+**Scenario**: Incident resolved, need to finalize PRB before post-incident meeting.
+
+```bash
+# 1. Analyze your draft PRB
+prb analyze incident-draft.md
+
+# Output:
+# {
+#   "completeness_score": 75.5,
+#   "grade": "C",
+#   "strengths": ["All required sections present", "Detailed timeline"],
+#   "weaknesses": ["Timeline needs more detail", "No action items defined"],
+#   "improvement_suggestions": [
+#     "Add action items with owners and due dates",
+#     "Expand Root Cause Analysis section"
+#   ]
+# }
+
+# 2. Validate structure
+prb validate incident-draft.md
+
+# 3. Extract action items to track
+prb actions incident-draft.md
+
+# 4. Improve based on feedback, re-analyze until A/B grade
+```
+
+**Result**: High-quality PRB ready for review, nothing missed.
+
+### Use Case 3: PRB Template for Team
+
+**Scenario**: Establish PRB standards for your SRE team.
+
+```bash
+# 1. Get a template
+prb template --type standard > team-prb-template.md
+
+# 2. For critical incidents
+prb template --type critical > critical-incident-template.md
+
+# 3. For detailed retrospectives
+prb template --type postmortem > postmortem-template.md
+
+# 4. Share templates with team via wiki/git
+```
+
+**Result**: Consistent PRB format across all team incidents.
+
+### Use Case 4: IDE Integration (Copilot Chat / Claude Code)
+
+**Scenario**: Use PRB tools directly in your IDE while writing PRB.
+
+In VS Code with Copilot Chat or Claude Code:
 
 ```
-config/
-└── {VerticleName}.v{version}/
-    ├── lambda.json       # Metadata: artifactId, verticleClass, endpoint, handlerType
-    └── config.json       # Endpoint-specific config: database, API settings, etc.
+@prb-sre-assistant draft_prb(
+  incident_description="Database connection pool exhausted at 14:30...",
+  severity="Critical",
+  affected_systems="api,database"
+)
+
+# Get instant PRB draft in chat
+# Copy to file, continue editing with AI assistance
 ```
 
-**lambda.json** example:
+In Chat:
+```
+"Analyze this PRB for completeness"
+# AI uses analyze_prb() tool automatically
+# Gets structured feedback
+```
+
+**Result**: PRB drafting and analysis without leaving your editor.
+
+---
+
+## 🛠️ Architecture
+
+```
+PRB SRE Assistant
+├── MCP Server (server.py)
+│   ├── 10 MCP tools for PRB management
+│   └── Document search via SQLite FTS5
+│
+├── PRB Analyzer (prb_analyzer.py)
+│   ├── Parse PRB markdown structure
+│   ├── Validate completeness (scoring algorithm)
+│   ├── Extract action items, timeline, metadata
+│   └── Generate improvement recommendations
+│
+├── PRB Drafter (prb_drafter.py)
+│   ├── Generate PRB from incident description
+│   ├── 3 templates (standard, critical, postmortem)
+│   ├── Suggest missing sections
+│   └── Extract incident metadata from text
+│
+└── CLI (cli.py)
+    └── 10 commands wrapping MCP tools
+```
+
+---
+
+## 📚 PRB Structure
+
+A complete PRB contains:
+
+```markdown
+# PRB-YYYY-NNN: [Title]
+
+## Incident Summary
+- PRB ID, Date, Severity, Status
+- Affected Systems, Impact, Duration
+
+## Timeline
+- HH:MM - Event/action
+- HH:MM - Event/action
+
+## Root Cause Analysis
+[Detailed technical explanation]
+
+## Resolution
+[How it was fixed]
+
+## Action Items
+- [ ] Action (Owner: @user, Due: YYYY-MM-DD)
+
+## Prevention
+[How to prevent recurrence]
+
+## Lessons Learned
+[Key insights]
+```
+
+See `docs/prbs/prb-best-practices.md` for complete guide.
+
+---
+
+## 🎓 PRB Scoring Algorithm
+
+PRBs are scored 0-100% based on:
+
+**Required Sections (70% weight)**:
+- Incident Summary
+- Timeline (minimum 3 events)
+- Root Cause Analysis
+- Resolution
+- Action Items (with owners and due dates)
+- Prevention
+
+**Section Completeness (30% weight)**:
+- Word count thresholds per section
+- Metadata completeness
+- Action item details (owner, due date)
+
+**Grading**:
+- A: 90-100% - Excellent, ready for review
+- B: 80-89% - Good, minor improvements needed
+- C: 70-79% - Fair, some sections need expansion
+- D: 60-69% - Poor, significant work required
+- F: < 60% - Incomplete, major rework needed
+
+---
+
+## 🔌 IDE Integration
+
+### VS Code (Copilot Chat or Claude Code)
+
+In your project, create `.vscode/settings.json`:
+
 ```json
 {
-  "artifactId": "user-query-service",
-  "verticleClass": "com.example.verticles.UserQueryVerticle",
-  "version": "v1",
-  "endpoint": "/api/users/query",
-  "handlerType": "AsyncHandler"
-}
-```
-
-**config.json** example:
-```json
-{
-  "database": {
-    "host": "postgres.example.com",
-    "port": 5432,
-    "database": "userdb",
-    "user": "app_user",
-    "password": "${DB_PASSWORD}",
-    "maxPoolSize": 20
-  }
-}
-```
-
-### Platform vs Standard Vert.x
-
-| Aspect | Platform Approach | Standard Vert.x |
-|--------|-------------------|-----------------|
-| **Interface** | Implement handler interface | Extend AbstractVerticle |
-| **Deployment** | Managed by platform | Teams write deployment code |
-| **Routing** | Configured in lambda.json | Teams configure routes |
-| **Configuration** | Access via `config().getData()` | Access via `config()` |
-| **Thread Model** | 3 handler types (async/sync/multipart) | All verticles similar |
-| **Focus** | Business logic only | Full verticle lifecycle |
-
-## Architecture
-
-For detailed architecture and design documentation, see:
-- **[design/ARCHITECTURE.md](design/ARCHITECTURE.md)** - High-level system architecture
-- **[design/document-management.md](design/document-management.md)** - Document indexing and search
-- **[design/vertx-generation.md](design/vertx-generation.md)** - Vert.x code generation system
-- **[design/migration-system.md](design/migration-system.md)** - OpenRewrite migration guides
-- **[design/code-scoring.md](design/code-scoring.md)** - Code quality analysis and scoring
-
-## Project Structure
-
-```
-fast-mcp-local/
-├── docs/                          # Documentation source
-│   ├── *.md                       # General documentation
-│   ├── vertx/                     # Vert.x templates
-│   │   ├── templates/             # Verticle code templates
-│   │   │   ├── platform-async-handler.md     # Platform AsyncHandler
-│   │   │   ├── platform-sync-handler.md      # Platform SyncHandler
-│   │   │   ├── platform-multipart-handler.md # Platform MultipartHandler
-│   │   │   ├── postgres-verticle.md          # Standard PostgreSQL
-│   │   │   └── http-verticle.md              # Standard HTTP
-│   │   ├── schemas/               # Verticle metadata (JSON)
-│   │   │   ├── platform-async.json           # AsyncHandler metadata
-│   │   │   ├── platform-sync.json            # SyncHandler metadata
-│   │   │   ├── platform-multipart.json       # MultipartHandler metadata
-│   │   │   ├── postgres.json                 # PostgreSQL metadata
-│   │   │   └── http.json                     # HTTP metadata
-│   │   └── deployment-config.md   # Deployment guide
-│   ├── migrations/                # Migration guides
-│   │   ├── v1-to-v2/              # V1 to V2 migration
-│   │   │   ├── migration-guide.md # Overview
-│   │   │   ├── steps.md           # Step-by-step instructions
-│   │   │   └── gradle-setup.md    # Gradle configuration
-│   │   └── schemas/               # Migration metadata (JSON)
-│   └── patterns/                  # Code scoring patterns
-│       └── vertx/                 # Vert.x patterns
-│           ├── scoring-rules.json # Scoring rules definition
-│           ├── best-practices.md  # Best practices guide
-│           └── anti-patterns.md   # Anti-patterns guide
-├── src/fast_mcp_local/
-│   ├── server.py                  # Main MCP server
-│   ├── database.py                # SQLite operations
-│   ├── loader.py                  # Document loader
-│   ├── template_extractor.py      # Template parsing
-│   ├── metadata.py                # Verticle metadata
-│   ├── migration.py               # Migration guide management
-│   ├── pattern_matcher.py         # Pattern matching engine
-│   ├── scorer.py                  # Code scoring module
-│   └── cli.py                     # CLI wrapper
-├── tests/                         # Test suite (120 tests)
-└── documents.db                   # SQLite database (auto-generated)
-```
-
-## GitHub Copilot Integration
-
-This project includes GitHub Copilot workspace instructions that allow Copilot to query the documentation and generate code using the CLI tools.
-
-**Setup:**
-1. Copilot automatically reads `.github/copilot-instructions.md`
-2. Copilot can now execute CLI commands to help you:
-   - Search documentation: "Search for postgres examples"
-   - Generate code: "Generate an HTTP verticle"
-   - Find information: "How do I deploy verticles?"
-
-**Example Copilot conversation:**
-
-```
-You: "Generate a PostgreSQL verticle for my project"
-
-Copilot: I'll generate that for you.
-[Executes: mcp generate postgres]
-
-Here's your PostgreSQL verticle:
-
-[Shows generated Java code, Gradle dependencies, and configuration]
-```
-
-**Note:** This works even when MCP server integration is disabled in your organization, as it uses the CLI wrapper instead.
-
-## Development
-
-### Adding New MCP Tools
-
-To add a new tool, edit `src/fast_mcp_local/server.py`:
-
-```python
-def my_new_tool(param: str) -> str:
-    """Tool description."""
-    # Implementation
-    return result
-
-# Register with MCP
-mcp.tool()(my_new_tool)
-```
-
-### Adding New Verticle Templates
-
-1. Create `docs/vertx/templates/[type]-verticle.md` with template content
-2. Create `docs/vertx/schemas/[type].json` with metadata
-3. Restart server - template automatically available
-
-### Adding New Migrations
-
-1. Create migration directory: `docs/migrations/[migration-id]/`
-2. Add migration documentation:
-   - `migration-guide.md` - Overview and introduction
-   - `steps.md` - Step-by-step instructions
-   - `gradle-setup.md` - Gradle configuration reference
-3. Create metadata: `docs/migrations/schemas/[migration-id].json`
-4. Restart server - migration automatically available via CLI and MCP tools
-
-Example migration metadata:
-```json
-{
-  "migration_id": "v1-to-v2",
-  "name": "V1 to V2 Migration",
-  "description": "Migrate from version 1.x to 2.x",
-  "source_version": "1.x",
-  "target_version": "2.x",
-  "openrewrite_dependency": {
-    "group": "com.example",
-    "artifact": "migration-recipes",
-    "version": "1.0.0",
-    "recipe_class": "com.example.V1ToV2Migration"
-  },
-  "prerequisites": {
-    "java_version": "11+",
-    "gradle_version": "7.0+"
-  },
-  "total_steps": 5,
-  "estimated_time": "15-20 minutes"
-}
-```
-
-### Adding New Scoring Patterns
-
-1. Create pattern directory: `docs/patterns/[pattern-name]/`
-2. Add pattern documentation:
-   - `scoring-rules.json` - Rule definitions with patterns and scores
-   - `best-practices.md` - Best practices guide
-   - `anti-patterns.md` - Anti-patterns guide
-3. Restart server - pattern automatically available via CLI and MCP tools
-
-Example scoring rules:
-```json
-{
-  "pattern_id": "vertx-best-practices",
-  "name": "Vert.x Best Practices Compliance",
-  "description": "Evaluate Vert.x verticle code",
-  "passing_threshold": 70,
-  "categories": {
-    "deployment": {
-      "weight": 20,
-      "description": "Proper deployment",
-      "rules": [
-        {
-          "id": "deployment-options",
-          "name": "Uses DeploymentOptions",
-          "pattern_type": "presence",
-          "pattern": "DeploymentOptions",
-          "score": 10,
-          "severity": "medium",
-          "suggestion": "Use DeploymentOptions"
+  "github.copilot.advanced": {
+    "mcp": {
+      "servers": {
+        "prb-sre-assistant": {
+          "command": "python3",
+          "args": ["-m", "fast_mcp_local.server"],
+          "cwd": "/path/to/fast-mcp-local",
+          "env": {
+            "PYTHONPATH": "/path/to/fast-mcp-local/src"
+          }
         }
-      ]
+      }
     }
+  },
+  "github.copilot.chat.mcp.enabled": true
+}
+```
+
+Then in Copilot Chat:
+```
+@prb-sre-assistant search_prbs("database timeout")
+@prb-sre-assistant draft_prb("API errors observed...")
+```
+
+### IntelliJ IDEA (Copilot Plugin)
+
+`Settings` > `Tools` > `GitHub Copilot` > `MCP Servers` > Add:
+- Name: `prb-sre-assistant`
+- Command: `python3`
+- Args: `-m fast_mcp_local.server`
+- Working Directory: `/path/to/fast-mcp-local`
+
+---
+
+## 📁 Add Your Own PRBs
+
+```bash
+# Add your company's PRBs to docs/prbs/
+mkdir -p docs/prbs/company
+cp ~/incidents/*.md docs/prbs/company/
+
+# Restart MCP server to re-index
+python3 -m fast_mcp_local.server
+
+# Now searchable!
+prb search "your incident keywords"
+```
+
+PRBs are automatically indexed from:
+- `docs/prbs/examples/` - Example PRBs
+- `docs/prbs/company/` - Your company PRBs (add yours here)
+- `docs/prbs/` - Any markdown files
+
+---
+
+## 🧪 Examples
+
+### Example 1: Draft PRB from Incident
+
+```bash
+$ prb draft "API gateway started returning 503 errors at 14:30. Investigation showed database connection pool was exhausted. All 100 connections were being held by slow queries." --severity Critical --systems "api-gateway,database"
+
+{
+  "prb_draft": "# PRB-2025-1015: API gateway started returning 503 errors at 14:30...\n\n## Incident Summary\n- **PRB ID**: PRB-2025-1015\n- **Date**: 2025-10-15\n- **Severity**: Critical\n...",
+  "instructions": "Copy this draft and fill in placeholders as incident progresses"
+}
+```
+
+### Example 2: Analyze PRB Quality
+
+```bash
+$ prb analyze my-incident.md
+
+{
+  "completeness_score": 85.5,
+  "grade": "B",
+  "summary": "PRB-2025-1015: Database Connection Pool Exhaustion\nOverall Quality: 85.5% (Grade: B)\nRequired Sections: 6/6\nAction Items: 7\nTimeline Events: 8",
+  "strengths": [
+    "All required sections present",
+    "7 sections with good/excellent quality",
+    "All action items have owners and due dates",
+    "Detailed timeline with 8 events"
+  ],
+  "weaknesses": [
+    "1 sections need more detail"
+  ],
+  "improvement_suggestions": [
+    "Expand Prevention section (currently 65% complete)"
+  ],
+  "estimated_completion_time": "15-30 minutes (add missing details)"
+}
+```
+
+### Example 3: Extract Action Items
+
+```bash
+$ prb actions my-incident.md
+
+{
+  "total_action_items": 7,
+  "action_items": [
+    {
+      "description": "Add missing database index (Owner: @db-team, Due: 2024-01-15)",
+      "owner": "db-team",
+      "due_date": "2024-01-15",
+      "status": "completed",
+      "line_number": 67
+    },
+    ...
+  ],
+  "summary": {
+    "pending": 4,
+    "completed": 3,
+    "with_owner": 7,
+    "with_due_date": 7
   }
 }
 ```
 
-## License
+---
+
+## 🤝 Contributing
+
+This is an internal tool for SRE teams. To customize:
+
+1. **Add your PRB templates** in `prb_drafter.py`
+2. **Customize scoring rules** in `prb_analyzer.py`
+3. **Add company-specific sections** to validation
+4. **Extend CLI** with team-specific commands
+
+---
+
+## 📖 Documentation
+
+- **Best Practices**: `docs/prbs/prb-best-practices.md`
+- **Example PRBs**: `docs/prbs/examples/`
+- **Architecture**: This README
+
+---
+
+## 🎯 Roadmap
+
+Future enhancements:
+- [ ] AI-powered root cause suggestions from past PRBs
+- [ ] Automatic severity classification
+- [ ] Integration with PagerDuty/ServiceNow
+- [ ] PRB similarity scoring (find duplicates)
+- [ ] Action item tracking dashboard
+- [ ] Slack bot integration for PRB updates
+
+---
+
+## 📝 License
 
 MIT License
+
+---
+
+## 🆘 Support
+
+For issues or questions:
+- Check `docs/prbs/prb-best-practices.md`
+- Review example PRBs in `docs/prbs/examples/`
+- Open an issue on GitHub
+
+---
+
+**Built for SRE teams who want to learn from every incident** 🚀
+
+*"The goal of a PRB is not to assign blame, but to learn and improve."*

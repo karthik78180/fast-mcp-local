@@ -1,12 +1,14 @@
-"""FastMCP server with document search, code generation, migrations, and scoring.
+"""FastMCP server for PRB (Problem Record) management.
 
-Core features:
-1. Document search - Search company Vert.x documentation
-2. Code generation - Generate verticle code from templates
-3. Migrations - OpenRewrite migration guides
-4. Code scoring - Analyze code against best practices
+SRE-focused tools for:
+1. Drafting PRBs from incident descriptions
+2. Analyzing PRB completeness and quality
+3. Searching past PRB documentation
+4. Validating PRB structure
+5. Extracting action items
+6. Finding similar incidents
 
-Designed for easy customization with company-specific context.
+Designed for SRE teams handling incident response and postmortems.
 """
 
 import os
@@ -15,47 +17,42 @@ from pathlib import Path
 from fastmcp import FastMCP
 from .database import DocumentDatabase
 from .loader import initialize_documents
-from .template_extractor import TemplateExtractor
-from .metadata import VerticleMetadata
-from . import migration
-from . import scorer
+from .prb_analyzer import PRBAnalyzer
+from .prb_drafter import PRBDrafter
 
 # Initialize FastMCP server
-mcp = FastMCP("fast-mcp-local")
+mcp = FastMCP("prb-sre-assistant")
 
 # Global instances
 db: DocumentDatabase | None = None
-metadata_loader: VerticleMetadata | None = None
-template_extractor: TemplateExtractor | None = None
+prb_analyzer: PRBAnalyzer | None = None
+prb_drafter: PRBDrafter | None = None
 
 
 def _initialize():
-    """Initialize database and template system."""
-    global db, metadata_loader, template_extractor
+    """Initialize database and PRB tools."""
+    global db, prb_analyzer, prb_drafter
 
     base_path = Path(__file__).parent.parent.parent
     docs_path = base_path / "docs"
-    db_path = base_path / "documents.db"
+    db_path = base_path / "prb_documents.db"
 
     # Initialize database
     db = DocumentDatabase(str(db_path))
     db.connect()
 
-    # Load documents
+    # Load PRB documentation
     if docs_path.exists():
-        print(f"📚 Loading documents from {docs_path}...")
+        print(f"📚 Loading PRB documentation from {docs_path}...")
         stats = initialize_documents(str(docs_path), str(db_path))
         print(f"✅ Loaded: {stats['loaded']} docs, {stats['total_tokens']} tokens")
     else:
         print(f"⚠️  Docs directory not found: {docs_path}")
 
-    # Initialize template system
-    vertx_schemas_path = base_path / "docs" / "vertx" / "schemas"
-    if vertx_schemas_path.exists():
-        metadata_loader = VerticleMetadata(vertx_schemas_path)
-        template_extractor = TemplateExtractor()
-        types = metadata_loader.list_all_types()
-        print(f"✅ Loaded {len(types)} verticle templates")
+    # Initialize PRB tools
+    prb_analyzer = PRBAnalyzer()
+    prb_drafter = PRBDrafter()
+    print(f"✅ PRB tools initialized")
 
 
 # Initialize on module load (skip during tests)
@@ -64,35 +61,40 @@ if not os.environ.get("PYTEST_CURRENT_TEST"):
 
 
 # =============================================================================
-# MCP TOOLS - Document Search
+# MCP TOOLS - PRB Documentation Search
 # =============================================================================
 
-def search_documents(query: str, limit: int = 10) -> str:
-    """Search company Vert.x documentation.
+def search_prbs(query: str, limit: int = 10) -> str:
+    """Search past PRB documentation and examples.
 
     Args:
-        query: Search query (e.g., "async handler", "configuration")
+        query: Search query (e.g., "database timeout", "memory leak")
         limit: Maximum results to return (default: 10)
 
     Returns:
-        JSON array of matching documents with snippets
+        JSON array of matching PRB documents with snippets
+
+    Example:
+        search_prbs("database connection pool exhausted", limit=5)
     """
     if not db:
         return json.dumps([])
 
     results = db.search_documents(query, limit)
-
     return json.dumps(results, indent=2)
 
 
-def get_document(filename: str) -> str:
-    """Get full content of a specific document.
+def get_prb(filename: str) -> str:
+    """Get full content of a specific PRB document.
 
     Args:
-        filename: Document filename (e.g., 'platform-async-handler.md')
+        filename: PRB filename (e.g., 'prb-2024-001-database-outage.md')
 
     Returns:
-        JSON with document content and metadata
+        JSON with PRB content and metadata
+
+    Example:
+        get_prb("prb-2024-001-database-outage.md")
     """
     if not db:
         return json.dumps({"error": "Database not initialized"})
@@ -103,234 +105,231 @@ def get_document(filename: str) -> str:
         all_docs = db.get_all_documents()
         available = [d["filename"] for d in all_docs]
         return json.dumps({
-            "error": f"Document '{filename}' not found",
-            "available_documents": available[:10]  # Show first 10
+            "error": f"PRB '{filename}' not found",
+            "available_prbs": available[:10]  # Show first 10
         }, indent=2)
 
     return json.dumps(doc, indent=2)
 
 
-def list_documents() -> str:
-    """List all available documentation.
+def list_prbs() -> str:
+    """List all available PRB documentation.
 
     Returns:
-        JSON array of all documents with metadata
+        JSON array of all PRBs with metadata
+
+    Example:
+        list_prbs()
     """
     if not db:
         return json.dumps([])
 
     documents = db.get_all_documents()
-
     return json.dumps(documents, indent=2)
 
 
-# Alias for backward compatibility
-get_all_documents = list_documents
+# =============================================================================
+# MCP TOOLS - PRB Drafting
+# =============================================================================
+
+def draft_prb(incident_description: str,
+              severity: str = "High",
+              affected_systems: str = "") -> str:
+    """Generate a PRB draft from incident description.
+
+    Args:
+        incident_description: Description of the incident
+        severity: Severity level (Critical/High/Medium/Low)
+        affected_systems: Comma-separated list of affected systems
+
+    Returns:
+        PRB draft in markdown format
+
+    Example:
+        draft_prb(
+            incident_description="API gateway returned 503 errors...",
+            severity="Critical",
+            affected_systems="api-gateway, backend-service"
+        )
+    """
+    if not prb_drafter:
+        return json.dumps({"error": "PRB drafter not initialized"})
+
+    # Parse affected systems
+    systems = [s.strip() for s in affected_systems.split(",")] if affected_systems else None
+
+    # Generate draft
+    draft = prb_drafter.draft_prb(
+        incident_description=incident_description,
+        severity=severity,
+        affected_systems=systems
+    )
+
+    return json.dumps({
+        "prb_draft": draft,
+        "instructions": "Copy this draft and fill in the placeholders as the incident progresses"
+    }, indent=2)
+
+
+def create_prb_template(template_type: str = "standard") -> str:
+    """Create a blank PRB from template.
+
+    Args:
+        template_type: Template type (standard/critical/postmortem)
+
+    Returns:
+        PRB template in markdown format
+
+    Example:
+        create_prb_template("critical")
+    """
+    if not prb_drafter:
+        return json.dumps({"error": "PRB drafter not initialized"})
+
+    template = prb_drafter.create_prb_from_template(template_type)
+
+    return json.dumps({
+        "template_type": template_type,
+        "template": template,
+        "instructions": f"Use this {template_type} PRB template as a starting point"
+    }, indent=2)
+
+
+def suggest_prb_sections(partial_prb: str) -> str:
+    """Suggest missing sections for a partial PRB.
+
+    Args:
+        partial_prb: Partial PRB content
+
+    Returns:
+        JSON array of suggested sections with templates
+
+    Example:
+        suggest_prb_sections("# PRB-2024-001\\n\\n## Timeline\\n...")
+    """
+    if not prb_drafter:
+        return json.dumps({"error": "PRB drafter not initialized"})
+
+    suggestions = prb_drafter.suggest_sections(partial_prb)
+
+    return json.dumps({
+        "missing_sections": len(suggestions),
+        "suggestions": suggestions
+    }, indent=2)
 
 
 # =============================================================================
-# MCP TOOLS - Verticle Code Generation
+# MCP TOOLS - PRB Analysis
 # =============================================================================
 
-def generate_verticle(verticle_type: str) -> str:
-    """Generate verticle code from template.
+def analyze_prb(prb_content: str) -> str:
+    """Analyze PRB completeness and provide suggestions.
 
     Args:
-        verticle_type: Template type (e.g., 'platform-async', 'platform-sync')
+        prb_content: PRB content in markdown format
 
     Returns:
-        JSON with verticle code, dependencies, and configuration
+        JSON with analysis, score, and improvement suggestions
+
+    Example:
+        analyze_prb(prb_content)
     """
-    if not metadata_loader or not template_extractor:
-        return json.dumps({"error": "Template system not initialized"})
+    if not prb_analyzer:
+        return json.dumps({"error": "PRB analyzer not initialized"})
 
-    # Load metadata
-    metadata = metadata_loader.load_metadata(verticle_type)
-    if not metadata:
-        available_types = metadata_loader.list_all_types()
-        return json.dumps({
-            "error": f"Unknown verticle type: {verticle_type}",
-            "available_types": [t["type"] for t in available_types],
-            "suggestion": "Run list_verticle_types() to see all options"
-        }, indent=2)
+    analysis = prb_analyzer.analyze_completeness(prb_content)
 
-    # Read template file
-    base_path = Path(__file__).parent.parent.parent
-    template_file = base_path / "docs" / "vertx" / metadata["template_file"]
-
-    if not template_file.exists():
-        return json.dumps({
-            "error": f"Template file not found: {template_file}"
-        }, indent=2)
-
-    template_content = template_file.read_text(encoding='utf-8')
-
-    # Extract code blocks
-    code_blocks = template_extractor.extract_code_blocks(template_content)
-
-    # Parse JSON config
-    config_example = {}
-    if 'json' in code_blocks:
-        try:
-            config_example = json.loads(code_blocks['json'])
-        except json.JSONDecodeError:
-            config_example = {"raw": code_blocks['json']}
-
-    # Build response
-    result = {
-        "type": metadata["type"],
-        "name": metadata["name"],
-        "description": metadata["description"],
-        "verticle_code": code_blocks.get("java", ""),
-        "gradle_dependencies": metadata.get("gradle_dependencies", []),
-        "config_example": config_example,
-        "deployment_example": code_blocks.get("deployment", ""),
-        "use_cases": metadata.get("use_cases", [])
-    }
-
-    return json.dumps(result, indent=2)
+    return json.dumps(analysis, indent=2)
 
 
-def list_verticle_types() -> str:
-    """List all available verticle templates.
-
-    Returns:
-        JSON array of available templates
-    """
-    if not metadata_loader:
-        return json.dumps([])
-
-    types = metadata_loader.list_all_types()
-
-    return json.dumps(types, indent=2)
-
-
-# =============================================================================
-# MCP TOOLS - Migration Guides
-# =============================================================================
-
-def list_migrations() -> str:
-    """List all available migration guides.
-
-    Returns:
-        JSON array of migration metadata
-    """
-    return migration.list_migrations()
-
-
-def get_migration_metadata(migration_id: str) -> str:
-    """Get migration metadata (versions, dependencies, steps count).
+def validate_prb(prb_content: str) -> str:
+    """Validate PRB structure and completeness.
 
     Args:
-        migration_id: Migration identifier (e.g., 'v1-to-v2')
+        prb_content: PRB content in markdown format
 
     Returns:
-        JSON with migration metadata
+        JSON with validation results and missing sections
+
+    Example:
+        validate_prb(prb_content)
     """
-    return migration.get_migration_metadata(migration_id)
+    if not prb_analyzer:
+        return json.dumps({"error": "PRB analyzer not initialized"})
+
+    validation = prb_analyzer.validate_prb(prb_content)
+
+    return json.dumps(validation, indent=2)
 
 
-def get_migration_guide(migration_id: str) -> str:
-    """Get full migration guide with all documentation.
+def extract_action_items(prb_content: str) -> str:
+    """Extract all action items from a PRB.
 
     Args:
-        migration_id: Migration identifier (e.g., 'v1-to-v2')
+        prb_content: PRB content in markdown format
 
     Returns:
-        JSON with complete migration guide
+        JSON array of action items with owners and due dates
+
+    Example:
+        extract_action_items(prb_content)
     """
-    return migration.get_migration_guide(migration_id)
+    if not prb_analyzer:
+        return json.dumps({"error": "PRB analyzer not initialized"})
+
+    action_items = prb_analyzer.extract_action_items(prb_content)
+
+    return json.dumps({
+        "total_action_items": len(action_items),
+        "action_items": action_items,
+        "summary": {
+            "pending": len([a for a in action_items if a["status"] == "pending"]),
+            "completed": len([a for a in action_items if a["status"] == "completed"]),
+            "with_owner": len([a for a in action_items if a["owner"]]),
+            "with_due_date": len([a for a in action_items if a["due_date"]])
+        }
+    }, indent=2)
 
 
-def get_migration_step(migration_id: str, step_number: int) -> str:
-    """Get specific step instructions from migration guide.
+def parse_prb(prb_content: str) -> str:
+    """Parse PRB and extract all structured data.
 
     Args:
-        migration_id: Migration identifier (e.g., 'v1-to-v2')
-        step_number: Step number (1-based)
+        prb_content: PRB content in markdown format
 
     Returns:
-        JSON with step content
+        JSON with parsed PRB data (metadata, sections, timeline, action items)
+
+    Example:
+        parse_prb(prb_content)
     """
-    return migration.get_migration_step(migration_id, step_number)
+    if not prb_analyzer:
+        return json.dumps({"error": "PRB analyzer not initialized"})
 
+    parsed = prb_analyzer.parse_prb(prb_content)
 
-# =============================================================================
-# MCP TOOLS - Code Scoring
-# =============================================================================
-
-def list_patterns() -> str:
-    """List all available scoring patterns.
-
-    Returns:
-        JSON array of available patterns with metadata
-    """
-    return scorer.list_patterns()
-
-
-def get_pattern_metadata(pattern_id: str) -> str:
-    """Get pattern metadata and scoring criteria.
-
-    Args:
-        pattern_id: Pattern identifier (e.g., 'vertx-best-practices')
-
-    Returns:
-        JSON with pattern metadata
-    """
-    return scorer.get_pattern_metadata(pattern_id)
-
-
-def score_codebase(codebase_path: str, pattern_id: str) -> str:
-    """Score a codebase against a pattern.
-
-    Args:
-        codebase_path: Path to codebase directory or file
-        pattern_id: Pattern identifier (e.g., 'vertx-best-practices')
-
-    Returns:
-        JSON with scoring results, violations, and recommendations
-    """
-    return scorer.score_codebase(codebase_path, pattern_id)
-
-
-def get_compliance_report(pattern_id: str, codebase_path: str) -> str:
-    """Get detailed compliance report in markdown format.
-
-    Args:
-        pattern_id: Pattern identifier (e.g., 'vertx-best-practices')
-        codebase_path: Path to codebase directory or file
-
-    Returns:
-        Markdown formatted compliance report
-    """
-    return scorer.get_compliance_report(pattern_id, codebase_path)
+    return json.dumps(parsed, indent=2)
 
 
 # =============================================================================
 # Register MCP Tools
 # =============================================================================
 
-# Document search tools
-mcp.tool()(search_documents)
-mcp.tool()(get_document)
-mcp.tool()(list_documents)
-mcp.tool()(get_all_documents)  # Alias for backward compatibility
+# Documentation search tools
+mcp.tool()(search_prbs)
+mcp.tool()(get_prb)
+mcp.tool()(list_prbs)
 
-# Code generation tools
-mcp.tool()(generate_verticle)
-mcp.tool()(list_verticle_types)
+# PRB drafting tools
+mcp.tool()(draft_prb)
+mcp.tool()(create_prb_template)
+mcp.tool()(suggest_prb_sections)
 
-# Migration tools
-mcp.tool()(list_migrations)
-mcp.tool()(get_migration_metadata)
-mcp.tool()(get_migration_guide)
-mcp.tool()(get_migration_step)
-
-# Code scoring tools
-mcp.tool()(list_patterns)
-mcp.tool()(get_pattern_metadata)
-mcp.tool()(score_codebase)
-mcp.tool()(get_compliance_report)
+# PRB analysis tools
+mcp.tool()(analyze_prb)
+mcp.tool()(validate_prb)
+mcp.tool()(extract_action_items)
+mcp.tool()(parse_prb)
 
 
 if __name__ == "__main__":

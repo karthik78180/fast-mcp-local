@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fast-mcp-local"
 version = "0.1.0"
-description = "A minimal FastMCP server implementation"
+description = "PRB SRE Assistant - AI-powered Problem Record management for SRE teams"
 requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=0.1.0",
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mcp = "fast_mcp_local.cli:main"
+prb = "fast_mcp_local.cli:main"
 
 [project.optional-dependencies]
 dev = [

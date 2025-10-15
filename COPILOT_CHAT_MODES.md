@@ -2,13 +2,142 @@
 
 This guide explains how to add custom chat modes (agents) in GitHub Copilot Chat for both **VS Code** and **IntelliJ IDEA**, specifically for Ask and Edit agent modes.
 
+**Use this guide to integrate fast-mcp-local into YOUR project repositories** to give Copilot access to company documentation, code templates, and best practices.
+
 ---
 
 ## Table of Contents
+- [Prerequisites & Installation](#prerequisites--installation)
+- [Quick Start (5 Minutes)](#quick-start-5-minutes)
 - [VS Code Setup](#vs-code-setup)
 - [IntelliJ IDEA Setup](#intellij-idea-setup)
 - [MCP Server Integration](#mcp-server-integration)
 - [Testing Your Custom Chat Mode](#testing-your-custom-chat-mode)
+
+---
+
+## Prerequisites & Installation
+
+### Step 1: Install Fast MCP Local
+
+```bash
+# Clone the fast-mcp-local repository
+git clone https://github.com/karthik78180/fast-mcp-local.git
+cd fast-mcp-local
+
+# Checkout the feature branch (or main/master)
+git checkout feature/minimal-hackathon-demo
+
+# Create virtual environment and install
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+### Step 2: Verify Installation
+
+```bash
+# Test the MCP server
+python3 -m fast_mcp_local.server
+
+# In another terminal, test CLI
+mcp search "test"
+mcp list-types
+```
+
+Press `Ctrl+C` to stop the server.
+
+### Step 3: Note Installation Path
+
+```bash
+# Save this path - you'll need it for IDE configuration
+pwd
+# Example output: /Users/yourname/fast-mcp-local
+```
+
+---
+
+## Quick Start (5 Minutes)
+
+### For Your Project Repository
+
+Once fast-mcp-local is installed, you can use it from **any repository** on your machine.
+
+**1. In Your Project (e.g., `~/my-vertx-app/`):**
+
+Create `.vscode/settings.json` (VS Code) or configure IntelliJ:
+
+```json
+{
+  "github.copilot.advanced": {
+    "mcp": {
+      "servers": {
+        "fast-mcp-local": {
+          "command": "python3",
+          "args": ["-m", "fast_mcp_local.server"],
+          "cwd": "/Users/yourname/fast-mcp-local",
+          "env": {
+            "PYTHONPATH": "/Users/yourname/fast-mcp-local/src"
+          }
+        }
+      }
+    }
+  },
+  "github.copilot.chat.mcp.enabled": true
+}
+```
+
+**Replace `/Users/yourname/fast-mcp-local`** with your actual installation path from Step 3.
+
+**2. Test in Copilot Chat:**
+
+```
+@fast-mcp-local search "async handler"
+@fast-mcp-local list_verticle_types
+@fast-mcp-local generate platform-async
+```
+
+That's it! You can now use fast-mcp-local tools from any project.
+
+### Customizing with Your Company Docs
+
+To add your company's documentation and templates:
+
+**1. Add Company Documentation**
+
+```bash
+cd /Users/yourname/fast-mcp-local
+mkdir -p docs/company
+# Add your markdown files
+cp ~/company-docs/*.md docs/company/
+```
+
+**2. Add Custom Templates**
+
+```bash
+# Add template markdown
+vi docs/vertx/templates/company-crud-handler.md
+
+# Add template metadata
+vi docs/vertx/schemas/company-crud.json
+```
+
+**3. Re-index Documents**
+
+```bash
+# Restart MCP server to pick up new docs
+python3 -m fast_mcp_local.server
+```
+
+**4. Test from Your Project**
+
+In your project's Copilot Chat:
+```
+@fast-mcp-local search "company guidelines"
+@fast-mcp-local list_verticle_types  # Should see your new templates
+```
+
+Now Copilot has access to YOUR company's context across all your projects!
 
 ---
 
@@ -21,9 +150,11 @@ This guide explains how to add custom chat modes (agents) in GitHub Copilot Chat
 
 ### Method 1: Using MCP Servers (Recommended)
 
+**Works from ANY repository** - just point to where you installed fast-mcp-local.
+
 **1. Configure MCP Server in VS Code Settings**
 
-Create or edit `.vscode/settings.json` in your workspace:
+In **YOUR PROJECT** (e.g., `~/my-company-app/`), create or edit `.vscode/settings.json`:
 
 ```json
 {
@@ -33,13 +164,18 @@ Create or edit `.vscode/settings.json` in your workspace:
         "fast-mcp-local": {
           "command": "python3",
           "args": ["-m", "fast_mcp_local.server"],
-          "cwd": "/path/to/fast-mcp-local"
+          "cwd": "/Users/yourname/fast-mcp-local",
+          "env": {
+            "PYTHONPATH": "/Users/yourname/fast-mcp-local/src"
+          }
         }
       }
     }
   }
 }
 ```
+
+**Important:** Replace `/Users/yourname/fast-mcp-local` with your actual installation path.
 
 **2. Enable MCP in Copilot Chat**
 
@@ -91,13 +227,17 @@ Edit: Add error handling to this verticle
 
 ### Method 3: Workspace-Specific Chat Participants
 
-**1. Create `.github/copilot-instructions.md`**
+**Use this in YOUR project repository** to give project-specific context.
+
+**1. In Your Project, Create `.github/copilot-instructions.md`**
+
+For example, in `~/my-company-app/.github/copilot-instructions.md`:
 
 ```markdown
-# Copilot Instructions for fast-mcp-local
+# Copilot Instructions for My Company App
 
 ## Context
-This is a Vert.x platform development workspace.
+This is our company's Vert.x platform development workspace.
 
 ## Available Tools
 You have access to the following MCP tools:
@@ -140,15 +280,20 @@ When editing code:
 
 ### Method 1: Using MCP Servers
 
+**Works from ANY project** - configure once and use everywhere.
+
 **1. Configure MCP Server**
 
-Open `Settings` > `Tools` > `GitHub Copilot` > `MCP Servers`
+In **YOUR PROJECT** in IntelliJ, open `Settings` > `Tools` > `GitHub Copilot` > `MCP Servers`
 
 Click `+` to add a new server:
 - **Name**: `fast-mcp-local`
 - **Command**: `python3`
 - **Arguments**: `-m fast_mcp_local.server`
-- **Working Directory**: `/path/to/fast-mcp-local`
+- **Working Directory**: `/Users/yourname/fast-mcp-local`
+- **Environment Variables**: `PYTHONPATH=/Users/yourname/fast-mcp-local/src`
+
+**Important:** Replace `/Users/yourname/fast-mcp-local` with your actual installation path.
 
 **2. Enable MCP Integration**
 
@@ -164,9 +309,11 @@ Open Copilot Chat tool window and use:
 
 ### Method 2: Custom Chat Context (Recommended for IntelliJ)
 
+**Use this in YOUR project** to provide project-specific context.
+
 **1. Create Custom Context File**
 
-Create `.idea/copilot-context.json`:
+In **YOUR PROJECT**, create `.idea/copilot-context.json`:
 
 ```json
 {
@@ -502,10 +649,63 @@ Convert synchronous code to async using company AsyncHandler pattern.
 - [FastMCP Guide](https://github.com/jlowin/fastmcp)
 
 ### Fast MCP Local Docs
-- [README_HACKATHON.md](./README_HACKATHON.md) - Quick start guide
-- [FEATURES.md](./FEATURES.md) - Complete feature list
-- [DEPENDENCIES.md](./DEPENDENCIES.md) - File dependencies
-- [ARCHITECTURE.md](./design/ARCHITECTURE.md) - System architecture
+- [README_HACKATHON.md](https://github.com/karthik78180/fast-mcp-local/blob/feature/minimal-hackathon-demo/README_HACKATHON.md) - Quick start guide
+- [FEATURES.md](https://github.com/karthik78180/fast-mcp-local/blob/feature/minimal-hackathon-demo/FEATURES.md) - Complete feature list
+- [DEPENDENCIES.md](https://github.com/karthik78180/fast-mcp-local/blob/feature/minimal-hackathon-demo/DEPENDENCIES.md) - File dependencies
+- [ARCHITECTURE.md](https://github.com/karthik78180/fast-mcp-local/blob/feature/minimal-hackathon-demo/design/ARCHITECTURE.md) - System architecture
+
+### Installation Location
+After following this guide, you'll have:
+- **Fast MCP Local installed at**: `/Users/yourname/fast-mcp-local/` (customize with your docs)
+- **Your projects at**: `~/my-company-app/`, `~/another-project/`, etc. (use `.vscode/settings.json` to connect)
+- **One MCP server, many projects**: Configure once, use everywhere
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Your Machine                             │
+│                                                             │
+│  ┌──────────────────────────────────────────────┐          │
+│  │  Fast MCP Local Installation                 │          │
+│  │  /Users/yourname/fast-mcp-local/             │          │
+│  │                                               │          │
+│  │  ├── docs/                                   │          │
+│  │  │   ├── company/  ← Your docs here         │          │
+│  │  │   ├── vertx/    ← Templates here         │          │
+│  │  │   └── patterns/ ← Best practices         │          │
+│  │  │                                           │          │
+│  │  ├── src/fast_mcp_local/                    │          │
+│  │  │   └── server.py  ← MCP Server            │          │
+│  │  │                                           │          │
+│  │  └── documents.db  ← Indexed docs           │          │
+│  └──────────────────────────────────────────────┘          │
+│                      ▲                                      │
+│                      │ References via cwd                   │
+│                      │                                      │
+│  ┌───────────────────┴──────────────┐                      │
+│  │  Your Projects (Any location)     │                      │
+│  │                                   │                      │
+│  │  ~/my-company-app/                │                      │
+│  │    └── .vscode/settings.json      │                      │
+│  │        (points to fast-mcp-local) │                      │
+│  │                                   │                      │
+│  │  ~/another-project/               │                      │
+│  │    └── .vscode/settings.json      │                      │
+│  │        (points to fast-mcp-local) │                      │
+│  │                                   │                      │
+│  │  ~/team-app/                      │                      │
+│  │    └── .idea/                     │                      │
+│  │        (IntelliJ MCP config)      │                      │
+│  └───────────────────────────────────┘                      │
+│                                                             │
+│  All projects share the same MCP server & documentation!   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key Point:** Install fast-mcp-local **once**, use it from **all your projects** by configuring the path in each project's IDE settings.
 
 ---
 

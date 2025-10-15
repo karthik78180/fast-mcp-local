@@ -133,9 +133,12 @@ See [docs/vertx/README.md](docs/vertx/README.md) for more information on Vert.x 
 
 ## Architecture
 
-For detailed architecture documentation, see:
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Overall system design with Mermaid diagrams
-- [ARCHITECTURE-VERTX-SIMPLE.md](ARCHITECTURE-VERTX-SIMPLE.md) - Vert.x extension architecture
+For detailed architecture and design documentation, see:
+- **[design/ARCHITECTURE.md](design/ARCHITECTURE.md)** - High-level system architecture
+- **[design/document-management.md](design/document-management.md)** - Document indexing and search
+- **[design/vertx-generation.md](design/vertx-generation.md)** - Vert.x code generation system
+- **[design/migration-system.md](design/migration-system.md)** - OpenRewrite migration guides
+- **[design/code-scoring.md](design/code-scoring.md)** - Code quality analysis and scoring
 
 ## Project Structure
 

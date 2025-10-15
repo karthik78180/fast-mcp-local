@@ -100,7 +100,7 @@ def get_pattern_metadata(pattern_id: str) -> str:
     categories = rules.get("categories", {})
     total_possible_score = 0
 
-    for category_name, category_data in categories.items():
+    for _category_name, category_data in categories.items():
         for rule in category_data.get("rules", []):
             score = rule.get("score", 0)
             if score > 0:  # Only count positive scores
@@ -191,7 +191,7 @@ def calculate_score(matches: List[PatternMatch], rules: List[Dict],
     category_scores = {}
     categories = rules_data.get("categories", {})
 
-    for category_name, category_data in categories.items():
+    for category_name, _category_data in categories.items():
         category_scores[category_name] = {
             "score": 0,
             "max": 0,
@@ -284,12 +284,12 @@ def calculate_score(matches: List[PatternMatch], rules: List[Dict],
     }
 
 
-def generate_recommendations(violations: List[Dict], rules_data: Dict) -> List[str]:
+def generate_recommendations(violations: List[Dict], _rules_data: Dict) -> List[str]:
     """Generate actionable recommendations from violations.
 
     Args:
         violations: List of violations found
-        rules_data: Full rules data
+        _rules_data: Full rules data (reserved for future use)
 
     Returns:
         List of recommendation strings

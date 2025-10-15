@@ -1,6 +1,6 @@
-# Hackathon Quick Start Guide
+# 2-Day Hackathon Quick Start Guide - PRB SRE Assistant
 
-**Goal**: Get your team productive in 15 minutes ⚡
+**Goal**: Get your team productive in 15 minutes and ready to demo PRB SRE Assistant
 
 ---
 
@@ -8,489 +8,382 @@
 
 ### Everyone
 
-1. **Clone Repository**
-   ```bash
-   git clone https://github.com/karthik78180/fast-mcp-local.git
-   cd fast-mcp-local
-   ```
+**1. Clone Repository**
+```bash
+git clone https://github.com/karthik78180/fast-mcp-local.git
+cd fast-mcp-local
+git checkout feature/prb-sre-assistant
+```
 
-2. **Set Up Python Environment**
-   ```bash
-   python3.10 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   pip3 install -e ".[dev]"
-   ```
+**2. Set Up Python Environment**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
 
-3. **Verify Installation**
-   ```bash
-   pytest  # Should see 120+ tests passing
-   python3 -m fast_mcp_local.server --help
-   ```
+**3. Verify Installation**
+```bash
+# Run tests (should see 25 tests passing)
+pytest
 
-4. **Install Node.js Tools** (for MCP Inspector)
-   ```bash
-   npm install -g @modelcontextprotocol/inspector
-   ```
+# Test MCP server
+python3 -m fast_mcp-local.server --help
 
-5. **Set Up IDE**
-   - Install VS Code or IntelliJ IDEA
-   - Install GitHub Copilot extension
-   - Install Claude Code CLI (if using Claude)
+# Test CLI
+prb search "database"
+prb list
+```
+
+**4. Test PRB Tools**
+```bash
+# Search example PRBs
+prb search "database timeout"
+
+# Draft a PRB
+prb draft "Test incident" --severity High
+
+# Analyze example PRB
+prb analyze docs/prbs/examples/prb-2024-001-database-connection-pool-exhaustion.md
+```
+
+**5. Familiarize with Codebase**
+```bash
+# Review main modules
+cat src/fast_mcp_local/server.py          # 10 MCP tools
+cat src/fast_mcp_local/prb_analyzer.py    # PRB analysis and scoring
+cat src/fast_mcp_local/prb_drafter.py     # PRB drafting and templates
+```
 
 ---
 
 ## Role-Specific Setup
 
-### Role 1: Backend Developer (Templates)
+### Role 1: SRE/Content Manager (PRB Data Collection)
 
-**Install Java Development Tools**:
+**Your Job**: Collect and prepare company PRB data for indexing
+
+**Pre-Hackathon Tasks**:
+1. [ ] Access company incident management system (Jira, ServiceNow, Confluence)
+2. [ ] Export past PRBs (last 6-12 months)
+3. [ ] Convert to markdown format if needed
+4. [ ] Organize by date or category
+
+**Setup**:
 ```bash
-# Verify Java installed
-java -version  # Should be Java 11+
+# Create company PRB directory
+mkdir -p docs/prbs/company
 
-# Familiarize with Vert.x
-# Review: docs/vertx/templates/platform-async-handler.md
+# Copy your company PRBs
+cp ~/exports/incidents/*.md docs/prbs/company/
+
+# Verify files
+ls -l docs/prbs/company/
+```
+
+**Test Indexing**:
+```bash
+# Start server to index PRBs
+python3 -m fast_mcp_local.server
+
+# You should see:
+# 📚 Loading documents from docs/prbs...
+# ✅ Loaded: X docs, Y tokens
+
+# Test search
+prb search "your incident keyword"
+prb list
+```
+
+**Day 1 Focus**:
+- Add 20+ company PRBs
+- Test search functionality
+- Identify PRB formatting issues
+- Document any data quality problems
+
+---
+
+### Role 2: Backend Developer (Template Customization)
+
+**Your Job**: Customize PRB templates for company format
+
+**Pre-Hackathon Tasks**:
+1. [ ] Review company PRB format/template
+2. [ ] Identify required vs optional sections
+3. [ ] Note any company-specific fields
+4. [ ] Review example PRBs
+
+**Setup**:
+```bash
+# Review existing templates
+prb template --type standard > standard-template.md
+prb template --type critical > critical-template.md
+prb template --type postmortem > postmortem-template.md
+
+# Review template source code
+cat src/fast_mcp_local/prb_drafter.py  # Lines 72-381
 ```
 
 **Test Template Generation**:
 ```bash
-# Start server
-python3 -m fast_mcp_local.server &
-
-# Test generation via CLI
-mcp generate platform-async
-mcp list-verticles
+# Draft PRB with different templates
+prb draft "Test incident" --severity High
+prb draft "Critical outage" --severity Critical
 ```
 
-**Your First Task**: Add a company-specific template
-- Copy `docs/vertx/templates/platform-async-handler.md` to `docs/vertx/templates/company-user-crud.md`
-- Replace with actual company verticle code
-- Create schema: `docs/vertx/schemas/company-user-crud.json`
+**Day 1 Focus**:
+- Modify templates in `prb_drafter.py` to match company format
+- Add company-specific sections
+- Test draft generation with real incident descriptions
+- Verify metadata extraction works
 
 ---
 
-### Role 2: Content Manager (Documentation)
+### Role 3: QA Engineer (Testing & Validation)
 
-**Gather Company Docs**:
-- [ ] Access company Confluence
-- [ ] Access internal wikis
-- [ ] Collect Slack conversations with code examples
-- [ ] Get access to company GitHub repos
+**Your Job**: Test all PRB features and ensure quality
 
-**Set Up Documentation Directory**:
+**Pre-Hackathon Tasks**:
+1. [ ] Set up Python environment
+2. [ ] Run all tests successfully
+3. [ ] Test all 10 CLI commands
+4. [ ] Test MCP server
+
+**Setup**:
 ```bash
-mkdir -p docs/company
-mkdir -p docs/company/examples
+# Run test suite
+pytest -v
+
+# Test each CLI command
+prb search "database"
+prb list
+prb get "prb-2024-001-database-connection-pool-exhaustion.md"
+prb draft "Test" --severity High
+prb template --type standard
+prb suggest docs/prbs/examples/prb-2024-001-database-connection-pool-exhaustion.md
+prb analyze docs/prbs/examples/prb-2024-001-database-connection-pool-exhaustion.md
+prb validate docs/prbs/examples/prb-2024-001-database-connection-pool-exhaustion.md
+prb actions docs/prbs/examples/prb-2024-001-database-connection-pool-exhaustion.md
+prb parse docs/prbs/examples/prb-2024-001-database-connection-pool-exhaustion.md
 ```
 
-**Test Document Indexing**:
-```bash
-python3 -c "
-from fast_mcp_local.loader import load_documents
-from fast_mcp_local.database import init_db
+**Create Test Checklist**:
+```markdown
+# PRB Assistant Test Checklist
 
-init_db()
-load_documents('docs/vertx')  # Test with existing docs
-"
+## Search & Discovery
+- [ ] Search returns relevant PRBs
+- [ ] List shows all indexed PRBs
+- [ ] Get retrieves correct PRB content
+
+## Drafting & Templates
+- [ ] Draft generates valid PRB structure
+- [ ] Templates include all required sections
+- [ ] Suggest identifies missing sections
+
+## Analysis & Quality
+- [ ] Analyze scores PRBs correctly
+- [ ] Validate checks required sections
+- [ ] Parse extracts structured data
+
+## Action Items
+- [ ] Extract finds all action items
+- [ ] Owner detection works (@username)
+- [ ] Due date extraction works (YYYY-MM-DD)
 ```
 
-**Your First Task**: Add 5 company docs
-- Create `docs/company/platform-overview.md`
-- Create `docs/company/configuration-guide.md`
-- Create `docs/company/best-practices.md`
-- Create `docs/company/troubleshooting.md`
-- Create `docs/company/faq.md`
+**Day 1 Focus**:
+- Test with company PRB data
+- Document any bugs or issues
+- Create comprehensive test report
+- Validate all features work with real data
 
 ---
 
-### Role 3: QA Engineer (Testing)
+### Role 4: DevEx Engineer (AI Integration & Demo)
 
-**Start MCP Inspector**:
-```bash
-npx @modelcontextprotocol/inspector python3 -m fast_mcp_local.server
-```
+**Your Job**: Test AI integration (Claude Code, GitHub Copilot) and prepare demo
 
-This will open a web UI at `http://localhost:6274` where you can:
-- See all available MCP tools
-- Test each tool interactively
-- Inspect request/response JSON
+**Pre-Hackathon Tasks**:
+1. [ ] Install Claude Code CLI (if using Claude)
+2. [ ] Install GitHub Copilot in VS Code (if using Copilot)
+3. [ ] Test MCP server integration
+4. [ ] Prepare demo scenarios
 
-**Test All Tools**:
-- [ ] `search_documents` - search for "postgres"
-- [ ] `get_all_documents` - list all docs
-- [ ] `get_document` - get specific doc
-- [ ] `generate_verticle` - generate "platform-async"
-- [ ] `list_verticle_types` - list all types
-- [ ] `score_codebase` - score a Java file
-- [ ] `list_migrations` - list migrations
-- [ ] `get_migration_guide` - get v1-to-v2 guide
-
-**Your First Task**: Create test checklist
-- Document expected behavior for each tool
-- Test with valid and invalid inputs
-- Log bugs in shared Google Doc
-
----
-
-### Role 4: DevEx Engineer (AI Integration)
-
-**Set Up GitHub Copilot**:
-1. Open VS Code
-2. Install GitHub Copilot extension
-3. Sign in with GitHub account
-4. Verify Copilot is active (should see icon in status bar)
-
-**Test Copilot Chat**:
-1. Open Copilot Chat (Ctrl+Shift+I or Cmd+Shift+I)
-2. Ask: "How do I use this MCP server?"
-3. Check if it references `.github/copilot-instructions.md`
-
-**Set Up Claude Code** (Optional):
+**Setup - Claude Code**:
 ```bash
 # Install Claude Code CLI
 # Follow: https://docs.claude.com/en/docs/claude-code
 
 # Test integration
-claude code "Search for postgres verticle examples"
+claude code "Search for database incidents in PRBs"
+claude code "Draft a PRB for API outage"
 ```
 
-**Your First Task**: Create demo scenarios
-- Write 5 prompts for Copilot to test
-- Record screenshots of Copilot responses
-- Document what works vs what doesn't
+**Setup - GitHub Copilot**:
+1. Open VS Code
+2. Install GitHub Copilot extension
+3. Configure MCP server (see README.md for config)
+4. Test in Copilot Chat
+
+**Demo Scenarios to Prepare**:
+
+**Scenario 1: Search Past PRBs**
+```
+Prompt: "Search for past database timeout incidents"
+Expected: Shows relevant PRBs with snippets
+```
+
+**Scenario 2: Draft PRB**
+```
+Prompt: "Draft a PRB for: API gateway returned 503 errors at 14:30, database connection pool exhausted"
+Expected: Returns complete PRB draft
+```
+
+**Scenario 3: Analyze PRB**
+```
+Prompt: "Analyze this PRB for completeness: [paste PRB content]"
+Expected: Returns score, grade, strengths, weaknesses
+```
+
+**Day 1 Focus**:
+- Test AI integration with company data
+- Create 5-7 demo scenarios
+- Record demo video (backup plan)
+- Take screenshots of successful interactions
 
 ---
 
-### Role 5: DevOps (Infrastructure)
+### Role 5: DevOps (Infrastructure & Presentation)
 
-**Create Docker Setup**:
+**Your Job**: Prepare demo environment and presentation materials
+
+**Pre-Hackathon Tasks**:
+1. [ ] Set up demo laptop
+2. [ ] Test projector connection
+3. [ ] Create presentation outline
+4. [ ] Plan deployment approach
+
+**Setup - Demo Environment**:
 ```bash
-# Create Dockerfile
-cat > Dockerfile <<'EOF'
-FROM python:3.10-slim
+# Test on presentation laptop
+python3 -m fast_mcp_local.server
 
-WORKDIR /app
-COPY . /app
+# Test CLI works
+prb search "database"
 
-RUN pip install -e ".[dev]"
-
-CMD ["python3", "-m", "fast_mcp_local.server"]
-EOF
-
-# Build and test
-docker build -t fast-mcp-local .
-docker run -p 8000:8000 fast-mcp-local
+# Prepare backup demo (video)
+# Record screen showing all features
 ```
 
-**Set Up GitHub Actions** (if time permits):
-```yaml
-# .github/workflows/test.yml
-name: Test
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: pip install -e ".[dev]"
-      - run: pytest
+**Presentation Outline**:
+```
+1. Problem Statement (2 min)
+   - SRE pain points
+   - Time wasted on PRB creation
+
+2. Our Solution (2 min)
+   - PRB SRE Assistant overview
+   - 4 core capabilities
+
+3. Live Demo (5-7 min)
+   - Search past PRBs
+   - Draft new PRB
+   - Analyze PRB quality
+   - Extract action items
+
+4. Business Value (2 min)
+   - Productivity gains (87% faster PRB creation)
+   - ROI analysis (1,300% first year)
+
+5. Production Roadmap (1 min)
+   - 8-week implementation plan
+   - Next steps
+
+6. Q&A (3-5 min)
 ```
 
-**Your First Task**: Create deployment plan
-- Document infrastructure requirements
-- Create docker-compose.yml
-- Plan demo environment setup
+**Day 1 Focus**:
+- Create presentation slides (15-20 slides)
+- Test A/V equipment
+- Record backup demo video
+- Prepare for common questions
 
 ---
 
 ## Day 1 Morning Checklist (First Hour)
 
-**Everyone meets at**: [Time, Location]
+**Team Meeting**: [Time, Location]
 
 ### Team Lead
 - [ ] Review roles and responsibilities
-- [ ] Set up Slack channel: `#hackathon-fast-mcp`
-- [ ] Create shared Google Doc for notes
-- [ ] Assign specific templates/docs to each person
+- [ ] Set up team Slack channel: `#hackathon-prb-assistant`
+- [ ] Create shared Google Doc for notes/issues
+- [ ] Assign specific tasks to each person
+- [ ] Set deadlines for Day 1
 
 ### All Team Members
 - [ ] Verify environment setup working
-- [ ] Run tests: `pytest`
+- [ ] Run tests: `pytest` (should see 25 tests passing)
 - [ ] Start MCP server: `python3 -m fast_mcp_local.server`
 - [ ] Test one CLI command
-- [ ] Report any setup issues
+- [ ] Report any setup issues immediately
 
 ---
 
-## Company-Specific Customization Checklist
+## Key Tasks for 2-Day Hackathon
 
-### 1. Add Company Templates (Role 1)
+### Day 1: Customization & Testing
 
-**Template Locations**:
-- `docs/vertx/templates/company-{name}-verticle.md` - Template markdown
-- `docs/vertx/schemas/company-{name}.json` - Metadata JSON
+**Morning (4 hours)**:
+- Role 1: Add 20+ company PRBs to `docs/prbs/company/`
+- Role 2: Customize templates in `prb_drafter.py`
+- Role 3: Test all features with company data
+- Role 4: Test AI integration with Claude/Copilot
+- Role 5: Create presentation structure
 
-**Template Format**:
-```markdown
-# Company {Name} Verticle
+**Afternoon (4 hours)**:
+- Role 1: Test search quality, fix data issues
+- Role 2: Customize scoring rules if needed
+- Role 3: Create comprehensive test report
+- Role 4: Record demo video
+- Role 5: Create presentation slides (first draft)
 
-## Description
-[What this verticle does in company context]
+### Day 2: Polish & Demo
 
-## Verticle Code
-```java
-package com.company.verticles;
+**Morning (4 hours)**:
+- All: Final testing and bug fixes
+- Role 4: Refine demo scenarios
+- Role 5: Polish presentation slides
+- All: Rehearse presentation (2x)
 
-import com.company.api.AsyncHandler;  // Company-specific import
-// ... actual company code ...
-```
+**Afternoon (2 hours)**:
+- All: Final presentation rehearsal
+- All: Test A/V equipment
+- All: Backup everything to cloud/USB
+- All: Final checklist review
 
-## Gradle Dependencies
-```gradle
-dependencies {
-    implementation 'com.company:platform-api:1.0.0'
-    // ... actual company dependencies ...
-}
-```
-
-## Configuration
-```json
-{
-  "database": {
-    "host": "company-postgres.internal",
-    // ... actual company config ...
-  }
-}
-```
-```
-
-**Priority Templates to Add**:
-1. Company user CRUD verticle (most common)
-2. Company authentication verticle
-3. Company payment processing verticle
-4. Company notification verticle
-5. Company file upload verticle
-
----
-
-### 2. Add Company Documentation (Role 2)
-
-**Priority Documents**:
-
-**docs/company/platform-overview.md**:
-```markdown
-# Company Vert.x Platform Overview
-
-## Architecture
-[Company platform architecture]
-
-## Handler Types
-- AsyncHandler: [When to use]
-- SyncHandler: [When to use]
-- MultipartHandler: [When to use]
-
-## Configuration Structure
-[Explain lambda.json and config.json]
-```
-
-**docs/company/configuration-guide.md**:
-```markdown
-# Configuration Guide
-
-## Environment Variables
-- `DB_PASSWORD`: Database password
-- `API_KEY`: External API key
-[List all environment variables]
-
-## Configuration Files
-- `lambda.json`: [Metadata schema]
-- `config.json`: [Endpoint configuration]
-```
-
-**docs/company/best-practices.md**:
-```markdown
-# Best Practices
-
-## Resource Management
-- Always close database connections in stop()
-- Use try-finally for resource cleanup
-
-## Configuration
-- Use config().getData() to access configuration
-- Never hardcode credentials
-
-## Error Handling
-- Return proper HTTP status codes
-- Log errors with context
-```
-
-**docs/company/examples/** (add 5-10 real company verticles)
-
----
-
-### 3. Add Company Scoring Rules (Role 1 + Role 3)
-
-**File**: `docs/patterns/company-best-practices/scoring-rules.json`
-
-```json
-{
-  "pattern_id": "company-best-practices",
-  "name": "Company Vert.x Best Practices",
-  "description": "Evaluate verticles against company standards",
-  "passing_threshold": 70,
-  "categories": {
-    "configuration": {
-      "weight": 20,
-      "description": "Proper configuration access",
-      "rules": [
-        {
-          "id": "config-access",
-          "name": "Uses config().getData()",
-          "pattern_type": "presence",
-          "pattern": "config\\(\\)\\.getData\\(\\)",
-          "score": 10,
-          "severity": "high",
-          "suggestion": "Use config().getData() for configuration access"
-        }
-      ]
-    },
-    "imports": {
-      "weight": 15,
-      "description": "Correct imports",
-      "rules": [
-        {
-          "id": "company-imports",
-          "name": "Uses company handler interfaces",
-          "pattern_type": "presence",
-          "pattern": "import com\\.company\\.api\\.(AsyncHandler|SyncHandler|MultipartHandler)",
-          "score": 10,
-          "severity": "high",
-          "suggestion": "Import company handler interfaces"
-        }
-      ]
-    }
-  }
-}
-```
-
----
-
-### 4. Update Copilot Instructions (Role 4)
-
-**File**: `.github/copilot-instructions.md`
-
-```markdown
-# GitHub Copilot Instructions for Company Vert.x Platform
-
-## Context
-This repository uses Company's custom Vert.x platform.
-
-## Platform Architecture
-- **AsyncHandler**: Non-blocking operations (PostgreSQL, HTTP clients, Redis)
-  - Thread model: Event loop (never block!)
-  - Examples: Database queries, REST API calls
-- **SyncHandler**: Blocking operations (SOAP, JDBC, file I/O)
-  - Thread model: Worker pool (blocking is safe)
-  - Examples: SOAP services, legacy databases
-- **MultipartHandler**: File uploads
-  - Thread model: Worker pool (file I/O is safe)
-  - Examples: Image uploads, document storage
-
-## Code Generation
-To generate verticle code, use the MCP server:
-```bash
-mcp search "postgres async handler"
-mcp generate company-user-crud
-mcp score ./MyVerticle.java --pattern company-best-practices
-```
-
-## Configuration Pattern
-All verticles use this configuration structure:
-```
-config/{VerticleName}.v{version}/
-├── lambda.json    # Metadata (artifactId, endpoint, handlerType)
-└── config.json    # Endpoint config (database, API settings)
-```
-
-Access config via: `config().getData().getJsonObject("database")`
-
-## Best Practices
-1. Use config().getData() for configuration
-2. Initialize resources in start()
-3. Clean up resources in stop()
-4. Never block the event loop in AsyncHandler
-5. Always close database connections
-6. Return proper HTTP status codes
-
-## Common Patterns
-- PostgreSQL queries: Use AsyncHandler with PgPool
-- SOAP calls: Use SyncHandler with SOAPConnection
-- File uploads: Use MultipartHandler with FileUpload
-```
-
----
-
-## Testing Your Customizations
-
-### Test Template Generation
-```bash
-# Generate company template
-mcp generate company-user-crud
-
-# Verify output includes:
-# - Java code with company imports
-# - Gradle dependencies with company artifacts
-# - Configuration with company patterns
-```
-
-### Test Document Search
-```bash
-# Search for company docs
-mcp search "company configuration"
-
-# Verify results include company-specific docs
-```
-
-### Test Code Scoring
-```bash
-# Score a company verticle
-mcp score ./src/main/java/com/company/verticles/UserVerticle.java \
-  --pattern company-best-practices
-
-# Verify company-specific rules are checked
-```
+**Presentation (1 hour)**:
+- Deliver 10-15 minute presentation
+- Live demo (with video backup)
+- Q&A
 
 ---
 
 ## Common Issues & Solutions
 
-### Issue: "No module named 'fast_mcp_local'"
+### Issue: "No PRBs found"
 **Solution**:
 ```bash
-# Make sure you're in virtual environment
-source .venv/bin/activate
+# Check docs/prbs/ has .md files
+ls -la docs/prbs/
 
-# Reinstall package
-pip install -e ".[dev]"
+# Re-index documents
+rm documents.db
+python3 -m fast_mcp_local.server
 ```
 
-### Issue: MCP Inspector won't start
-**Solution**:
-```bash
-# Check if port 6274 is already in use
-lsof -i :6274
-
-# Kill existing process
-kill -9 [PID]
-
-# Restart inspector
-npx @modelcontextprotocol/inspector python3 -m fast_mcp_local.server
-```
-
-### Issue: Tests failing
+### Issue: "Tests failing"
 **Solution**:
 ```bash
 # Clean up database
@@ -499,31 +392,37 @@ rm documents.db
 # Reinstall dependencies
 pip install -e ".[dev]"
 
-# Run tests
+# Run tests with verbose output
 pytest -v
 ```
 
-### Issue: Template not showing in list_verticle_types
-**Solution**:
-- Verify schema exists in `docs/vertx/schemas/`
-- Verify template exists in `docs/vertx/templates/`
-- Restart MCP server
-- Check JSON schema is valid: `python -m json.tool docs/vertx/schemas/your-template.json`
-
-### Issue: Documents not searchable
+### Issue: "MCP server won't start"
 **Solution**:
 ```bash
-# Re-index documents
-python3 -c "
-from fast_mcp_local.loader import load_documents
-from fast_mcp_local.database import init_db
+# Check Python version (need 3.10+)
+python3 --version
 
-init_db()
-load_documents('docs/company')
-"
+# Check for port conflicts
+lsof -i :8000
 
-# Verify indexing
-sqlite3 documents.db "SELECT filename FROM documents WHERE filename LIKE '%company%';"
+# Run with debug output
+python3 -m fast_mcp_local.server --verbose
+```
+
+### Issue: "Templates don't match company format"
+**Solution**:
+```python
+# Edit src/fast_mcp_local/prb_drafter.py
+# Modify TEMPLATES dictionary (lines 72-381)
+# Add/remove sections as needed
+```
+
+### Issue: "Scoring seems wrong"
+**Solution**:
+```python
+# Edit src/fast_mcp_local/prb_analyzer.py
+# Modify REQUIRED_SECTIONS (lines 34-41)
+# Modify scoring weights (lines 192-203)
 ```
 
 ---
@@ -531,86 +430,136 @@ sqlite3 documents.db "SELECT filename FROM documents WHERE filename LIKE '%compa
 ## Quick Commands Reference
 
 ```bash
+# Search & Discovery
+prb search "database timeout"
+prb list
+prb get "filename.md"
+
+# Drafting & Templates
+prb draft "incident description" --severity Critical --systems "api,db"
+prb template --type critical
+prb suggest my-draft.md
+
+# Analysis & Quality
+prb analyze my-prb.md
+prb validate my-prb.md
+prb parse my-prb.md
+
+# Action Items
+prb actions my-prb.md
+
 # Development
-pytest                          # Run tests
-pytest -v                       # Verbose tests
-pytest --cov                    # With coverage
-
-# MCP Server
-python3 -m fast_mcp_local.server           # Start server
-npx @modelcontextprotocol/inspector \
-  python3 -m fast_mcp_local.server         # Start with inspector
-
-# CLI
-mcp search "query"                         # Search docs
-mcp list-docs                              # List all docs
-mcp generate template-name                 # Generate code
-mcp list-verticles                         # List templates
-mcp score ./File.java --pattern pattern-id # Score code
-mcp list-patterns                          # List patterns
-
-# Database
-sqlite3 documents.db                       # Open database
-sqlite3 documents.db "SELECT * FROM documents;"  # Query docs
+pytest                              # Run all tests
+pytest -v                           # Verbose output
+python3 -m fast_mcp_local.server   # Start MCP server
 
 # Git
-git status                                 # Check status
-git add .                                  # Stage changes
-git commit -m "message"                    # Commit
-git push                                   # Push to remote
+git status
+git add .
+git commit -m "message"
+git push
 ```
 
 ---
 
-## Success Metrics
+## Success Criteria
 
-**By end of hackathon, you should have**:
+**By End of Day 1**:
+- [ ] 20+ company PRBs indexed and searchable
+- [ ] Templates customized for company format
+- [ ] All 10 MCP tools tested and working
+- [ ] AI integration (Claude/Copilot) tested
+- [ ] Demo scenarios prepared
+- [ ] Presentation slides created (first draft)
+- [ ] All tests passing
 
-- [ ] **3-5 company templates** working and tested
-- [ ] **20+ company docs** indexed and searchable
-- [ ] **Company scoring rules** implemented and tested
-- [ ] **GitHub Copilot integration** working
-- [ ] **Working demo** (live + video backup)
-- [ ] **Presentation ready** (15-20 slides)
-- [ ] **All tests passing** (120+ tests)
-- [ ] **Team confident** in presenting
+**By End of Day 2**:
+- [ ] Final testing complete
+- [ ] Demo video recorded (backup)
+- [ ] Presentation slides polished
+- [ ] Presentation rehearsed 3+ times
+- [ ] A/V equipment tested
+- [ ] Team ready to present
+
+---
+
+## Demo Flow (5-7 minutes)
+
+### Demo 1: Search Past PRBs (1-2 min)
+```bash
+prb search "database connection pool"
+# Shows: 3 relevant past PRBs with snippets
+# Impact: 97% faster than manual search (15-20 min → 30 sec)
+```
+
+### Demo 2: Draft New PRB (2-3 min)
+```bash
+prb draft "API gateway returned 503 errors at 14:30, database connection pool exhausted" \
+  --severity Critical \
+  --systems "api-gateway,database"
+# Shows: Complete PRB draft with all sections
+# Impact: 87% faster PRB creation (2-4 hours → 15-30 min)
+```
+
+### Demo 3: Analyze PRB Quality (2 min)
+```bash
+prb analyze my-draft-prb.md
+# Shows: Completeness score (75.5%), grade (C)
+# Shows: Weaknesses and improvement suggestions
+# Impact: Objective quality metrics, ensures nothing is missed
+```
+
+### Demo 4: AI Integration (optional, 1-2 min)
+```
+# In Claude Code or GitHub Copilot Chat
+"Search for past database incidents"
+"Draft a PRB for the API outage we just had"
+# Shows: AI can use PRB tools automatically
+```
+
+---
+
+## Backup Plans
+
+**If Live Demo Fails**:
+1. Play pre-recorded video
+2. Show screenshots with narration
+3. Describe workflows verbally
+
+**If Presentation Laptop Fails**:
+1. Switch to backup laptop (have project ready)
+2. Use phone/tablet to present slides
+3. Whiteboard the architecture
+
+**If Internet Down**:
+1. All demos work offline (no API dependencies)
+2. Have presentation slides on USB drive
+3. Have demo video on USB drive
 
 ---
 
 ## Emergency Contacts
 
 **During Hackathon**:
-- Team Slack: `#hackathon-fast-mcp`
+- Team Slack: `#hackathon-prb-assistant`
 - Team Lead: [Name, Phone]
-- Technical Questions: [Name, Phone]
-
-**Technical Support**:
-- Python Issues: [Resource/Person]
-- Vert.x Questions: [Resource/Person]
-- Infrastructure: [Resource/Person]
+- Technical Issues: [Name, Phone]
+- A/V Support: [Name, Phone]
 
 ---
 
 ## Motivational Reminder
 
 **Remember**:
-- ✅ **Done is better than perfect** - Ship working software
-- ✅ **Focus on demo** - What looks good in 5 minutes?
-- ✅ **Test early, test often** - Don't wait until last minute
-- ✅ **Help each other** - We win as a team
+- ✅ **Done is better than perfect** - Focus on working demo
+- ✅ **Impact over features** - Show ROI and business value
+- ✅ **Practice makes perfect** - Rehearse presentation 3+ times
 - ✅ **Have fun!** - This is a hackathon, enjoy it!
 
 ---
 
 **You've got this! 🚀**
 
-**Start hacking in**: [Hackathon Start Time]
-**Present in**: [Presentation Time]
+**Presentation Time**: [Date/Time]
 
----
-
-**Questions?** Check the full docs:
-- `HACKATHON_SUBMISSION.md` - Full project overview
-- `HACKATHON_WORKPLAN.md` - Detailed 2-day plan
-- `README.md` - Technical documentation
-- `design/` - Architecture documentation
+**Let's win this hackathon!** 🏆
